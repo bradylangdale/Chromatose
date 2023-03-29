@@ -28,9 +28,6 @@ class MyApp(ShowBase):
         self.scene = self.loader.loadModel("Assets/assets/Map/Map.bam")
         # Reparent the model to render.
         self.scene.reparentTo(self.render)
-        #self.scene.setShader(self.shader)
-        #self.colorPower = [0.0, 0.0, 0.0, 1.0]
-        #self.scene.setShaderInput("colorPower", self.colorPower)
         # Apply scale and position transforms on the model.
         self.scene.setScale(1, 1, 1)
         self.scene.setPos(0, 0, 0)
