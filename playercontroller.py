@@ -1,6 +1,7 @@
 from math import sin, pi, cos
 
 from direct.showbase.DirectObject import DirectObject
+from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
 from panda3d.bullet import BulletCharacterControllerNode, BulletCapsuleShape, ZUp
 from panda3d.core import NodePath, BitMask32, Vec3
@@ -42,6 +43,8 @@ class PlayerController(DirectObject):
         self.playerNode.setJumpSpeed(6.0)
 
         self.world.attachCharacter(self.playerNP.node())
+        self.vel = Vec3(0, 0, 0)
+        self.lastPos = self.playerNP.getPos()
 
     def setPos(self, vec3):
         self.playerNP.setPos(vec3)
@@ -78,6 +81,12 @@ class PlayerController(DirectObject):
             self.currentState['jump'] = False
 
         self.playerNode.setLinearMovement(speed, True)
+        dt = globalClock.getDt()
+        self.vel = Vec3((self.playerNP.getX() - self.lastPos.x) / dt,
+                        (self.playerNP.getY() - self.lastPos.y) / dt,
+                        (self.playerNP.getZ() - self.lastPos.z) / dt)
+
+        self.lastPos = self.playerNP.getPos()
 
         return Task.cont
 
