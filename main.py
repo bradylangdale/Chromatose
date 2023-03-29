@@ -4,9 +4,13 @@ from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from panda3d.core import WindowProperties, Vec3
 from direct.gui.DirectGui import *
-from panda3d.bullet import BulletWorld, BulletPlaneShape, BulletRigidBodyNode, BulletBoxShape, BulletDebugNode
+from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, \
+    BulletTriangleMesh, BulletTriangleMeshShape
 
-from PlayerController import PlayerController
+from interactableobject import InteractableObject
+from playercontroller import PlayerController
+
+DEBUG = False
 
 
 class MyApp(ShowBase):
@@ -26,19 +30,20 @@ class MyApp(ShowBase):
 
         self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1)
 
-        debugNode = BulletDebugNode('Debug')
-        debugNode.showWireframe(True)
-        debugNode.showConstraints(True)
-        debugNode.showBoundingBoxes(False)
-        debugNode.showNormals(False)
-        debugNP = self.render.attachNewNode(debugNode)
-        debugNP.show()
-
         # World
         self.world = BulletWorld()
         self.world.setGravity(Vec3(0, 0, -9.81))
-        self.world.setDebugNode(debugNP.node())
         self.worldNP = self.render.attachNewNode(BulletRigidBodyNode('World'))
+
+        if DEBUG:
+            debugNode = BulletDebugNode('Debug')
+            debugNode.showWireframe(True)
+            debugNode.showConstraints(True)
+            debugNode.showBoundingBoxes(False)
+            debugNode.showNormals(False)
+            debugNP = self.render.attachNewNode(debugNode)
+            debugNP.show()
+            self.world.setDebugNode(debugNP.node())
 
         # Disable the camera trackball controls.
         self.disableMouse()
@@ -46,19 +51,23 @@ class MyApp(ShowBase):
 
         self.player.setPos(self.camera.getPos() - Vec3(0, 20, 0))
 
-        # Plane
-        shape = BulletPlaneShape(Vec3(0, 0, 1), 1)
+        # Load Map Mesh
+        self.scene.clear_model_nodes()
+        self.scene.flatten_strong()
+        geom = self.scene.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)
         node = BulletRigidBodyNode('Ground')
         node.addShape(shape)
         np = self.render.attachNewNode(node)
-        np.setPos(0, 0, -1)
         self.world.attachRigidBody(node)
 
-        self.model = self.loader.loadModel('models/box.egg')
-        self.model.setPos(-0.5, -0.5, -0.5)
-        self.model.flattenLight()
-        for i in range(0, 500):
-           self.add_box(i)
+        for i in range(50):
+            InteractableObject(self, self.world, self.worldNP,
+                               Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
+                               'Assets/assets/Gun/Gun.gltf',
+                               scale=Vec3(0.02, 0.02, 0.02))
 
         self.add_task(self.update, 'update')
 
@@ -67,17 +76,6 @@ class MyApp(ShowBase):
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
         return task.cont
-
-    def add_box(self, i):
-        # Box
-        shape = BulletBoxShape(Vec3(0.5, 0.5, 0.5))
-        node = BulletRigidBodyNode('Box')
-        node.setMass(1000.0)
-        node.addShape(shape)
-        np = self.render.attachNewNode(node)
-        np.setPos(random.uniform(-10, 10), random.uniform(-10, 10), 1+(i * 0.1))
-        self.world.attachRigidBody(node)
-        self.model.copyTo(np)
 
 
 app = MyApp()
