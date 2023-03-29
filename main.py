@@ -21,7 +21,7 @@ class MyApp(ShowBase):
         # Reparent the model to render.
         self.scene.reparentTo(self.render)
         # Apply scale and position transforms on the model.
-        self.scene.setScale(10, 10, 10)
+        self.scene.setScale(1, 1, 1)
         self.scene.setPos(0, 0, 0)
 
         self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1)
