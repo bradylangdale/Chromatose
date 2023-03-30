@@ -20,9 +20,11 @@ void main() {
     vec4 positionCam = p3d_ModelViewMatrix * position;
     float val = abs(dot(normalCam, normalize(positionCam.xyz)));
     float multiplier = length(colorPower.rgb) / length(vec3(1.0f, 1.0f, 1.0f));
-    if(multiplier < 0.1f) {
-        float brightness = 1.0f - multiplier;
+    if(multiplier < 0.3f) {
+        float brightness = (0.3f - multiplier) / 0.3f;
         color = vec4(brightness, brightness, brightness, 1.0f);
+    } else {
+        color *= colorPower;
     }
-    p3d_FragColor = color * colorPower * val;
+    p3d_FragColor = color * val;
 }

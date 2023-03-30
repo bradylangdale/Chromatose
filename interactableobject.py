@@ -24,7 +24,13 @@ class InteractableObject(DirectObject):
         node = BulletRigidBodyNode()
         node.setMass(1.0)
         node.addShape(shape)
-        np = main.render.attachNewNode(node)
-        np.setPos(position)
+        self.np = main.render.attachNewNode(node)
+        self.np.setPos(position)
         self.world.attachRigidBody(node)
-        self.model.copyTo(np)
+        self.model.copyTo(self.np)
+    
+    def setShader(self, shader):
+        self.np.setShader(shader)
+    
+    def setShaderInput(self, name, value):
+        self.np.setShaderInput(name, value)
