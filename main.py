@@ -10,6 +10,7 @@ from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, \
 
 from interactableobject import InteractableObject
 from playercontroller import PlayerController
+from billboardobject import BillBoardObject
 
 DEBUG = False
 
@@ -80,6 +81,12 @@ class MyApp(ShowBase):
             self.objects.append(object)
 
         self.add_task(self.update, 'update')
+
+        # Add Billboard Enemy
+        self.billboard_enemy = BillBoardObject(self, "sprite.png", Vec3(0, 0, 8), scale=1.5)
+        self.billboard_enemy = BillBoardObject(self, "sprite.png", Vec3(2, 0, 10), scale=3)
+        self.billboard_enemy = BillBoardObject(self, "sprite.png", Vec3(2, 0, 10), scale=5)
+
 
     # Update
     def update(self, task):
