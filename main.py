@@ -3,7 +3,7 @@ import random
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
-from panda3d.core import WindowProperties, Vec3, Shader
+from panda3d.core import WindowProperties, Vec3, Shader, AntialiasAttrib
 from direct.gui.DirectGui import *
 from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, \
     BulletTriangleMesh, BulletTriangleMeshShape
@@ -18,12 +18,9 @@ class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
-        self.shader = Shader.load(Shader.SL_GLSL,
-                     vertex="./shaders/colors.vert",
-                     fragment="./shaders/colors.frag")
-
         # set the camera's lens to the one we just created
         self.cam.node().getLens().setFov(90)
+        self.cam.setAntialias(AntialiasAttrib.MAuto)
 
         filters = CommonFilters(self.win, self.cam)
         filters.setCartoonInk()
@@ -77,12 +74,10 @@ class MyApp(ShowBase):
         self.objects = []
         for i in range(50):
             object = InteractableObject(self, self.world, self.worldNP,
-                               Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
-                               'Assets/assets/Gun/Gun.gltf',
-                               scale=Vec3(0.02, 0.02, 0.02))
-            object.setShader(self.shader)
+                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
+                                        'Assets/assets/Gun/Gun.gltf',
+                                        scale=Vec3(0.02, 0.02, 0.02))
             self.objects.append(object)
-            
 
         self.add_task(self.update, 'update')
 
@@ -91,20 +86,15 @@ class MyApp(ShowBase):
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
 
-        
         rgb = Vec3(abs(self.player.vel.x), abs(self.player.vel.y), abs(self.player.vel.z)) / 4
-
-        # idk if there's a better way, based on what I read setShader triggers it to apply
-        self.scene.setShader(self.shader)
 
         if self.r > 0:
             self.r -= 0.001
             self.g -= 0.001
             self.b -= 0.001
-        colorPower = (self.r, self.g, self.b, 1.0)
-        self.scene.setShaderInput("colorPower", colorPower)
+        self.scene.setColorScale(self.r, self.g, self.b, 1.0)
         for object in self.objects:
-            object.setShaderInput("colorPower", colorPower)
+            object.np.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
 
         return task.cont
 
