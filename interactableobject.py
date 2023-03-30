@@ -28,9 +28,3 @@ class InteractableObject(DirectObject):
         self.np.setPos(position)
         self.world.attachRigidBody(node)
         self.model.copyTo(self.np)
-    
-    def setShader(self, shader):
-        self.np.setShader(shader)
-    
-    def setShaderInput(self, name, value):
-        self.np.setShaderInput(name, value)
