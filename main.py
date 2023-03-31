@@ -1,16 +1,11 @@
 import random
 
-import gltf
-import simplepbr
-from direct import p3d
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
-from panda3d.core import WindowProperties, Vec3, Shader, AntialiasAttrib, Spotlight, AmbientLight, LVector4, LPoint3, \
-    Material
+from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, Spotlight, AmbientLight, LVector4, LPoint3
 from direct.gui.DirectGui import *
-from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, \
-    BulletTriangleMesh, BulletTriangleMeshShape, BulletPlaneShape
+from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, BulletTriangleMesh, BulletTriangleMeshShape, BulletPlaneShape
 
 from interactableobject import InteractableObject
 from pipeline import CustomPipeline
@@ -73,6 +68,14 @@ class MyApp(ShowBase):
         self.world.attachRigidBody(node)
         self.scene.reparentTo(self.np)
 
+        # Plane (should keep things from falling through)
+        shape = BulletPlaneShape(Vec3(0, 0, 1), 1)
+        node = BulletRigidBodyNode('Ground')
+        node.addShape(shape)
+        np = self.render.attachNewNode(node)
+        np.setPos(0, 0, -1.1)
+        self.world.attachRigidBody(node)
+
         self.r = 1.0
         self.g = 1.0
         self.b = 1.0
@@ -84,6 +87,26 @@ class MyApp(ShowBase):
                                         'Assets/assets/Gun/Gun.bam',
                                         scale=Vec3(0.02, 0.02, 0.02))
             self.objects.append(object)
+
+        self.crystals = []
+        for i in range(3):
+            object = InteractableObject(self, self.world, self.worldNP,
+                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+                                             random.uniform(0, 20)),
+                                        'Assets/assets/BlueCrystal/Blue.bam')
+            self.crystals.append(object)
+
+            object = InteractableObject(self, self.world, self.worldNP,
+                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+                                             random.uniform(0, 20)),
+                                        'Assets/assets/RedCrystal/red.bam')
+            self.crystals.append(object)
+
+            object = InteractableObject(self, self.world, self.worldNP,
+                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+                                             random.uniform(0, 20)),
+                                        'Assets/assets/GreenCrystal/green.bam')
+            self.crystals.append(object)
 
         self.add_task(self.update, 'update')
 

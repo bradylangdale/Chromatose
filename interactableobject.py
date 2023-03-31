@@ -5,7 +5,7 @@ from panda3d.core import Vec3
 
 class InteractableObject(DirectObject):
 
-    def __init__(self, main, world, worldNP, position=Vec3(0, 0, 0), model='models/box.egg', scale=Vec3(0, 0, 0)):
+    def __init__(self, main, world, worldNP, position=Vec3(0, 0, 0), model='models/box.egg', scale=Vec3(1, 1, 1)):
         DirectObject.__init__(self)
 
         self.world = world
