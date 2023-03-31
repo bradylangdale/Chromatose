@@ -4,7 +4,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
 from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode
-from panda3d.core import NodePath, BitMask32, Vec3
+from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties
 
 
 class PlayerController(DirectObject):
@@ -23,6 +23,7 @@ class PlayerController(DirectObject):
         self.accept("d", self.toggle_move_state, ["right", True])
         self.accept("d-up", self.toggle_move_state, ["right", False])
         self.accept('space', self.toggle_move_state, ['jump', True])
+        self.accept('f', self.toggle_fullscreen)
         self.add_task(self.move, "move")
         self.add_task(self.rotate, "rotate")
 
@@ -58,6 +59,7 @@ class PlayerController(DirectObject):
         self.gun.setPos(0.7, 0.5, -0.35)
 
         self.canJump = True
+        self.fullscreen = False
 
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
@@ -102,12 +104,10 @@ class PlayerController(DirectObject):
         if self.currentState["right"] and 15 > current_right:
             speed += self.scale(3.0, right)
         if self.currentState['jump']:
-            if self.playerRB.getLinearVelocity().z > 0.1:
-                self.currentState['jump'] = False
-
             if self.canJump:
                 speed.setZ(70)
                 self.canJump = False
+                self.currentState['jump'] = False
 
         if speed.length() > 0:
             self.playerRB.applyCentralForce(speed)
@@ -134,3 +134,17 @@ class PlayerController(DirectObject):
 
     def signedMag(self, vec):
         return copysign(1, vec.x + vec.y) * vec.length()
+
+    def toggle_fullscreen(self):
+        if not self.fullscreen:
+            props = WindowProperties()
+            props.setFullscreen(1)
+            props.setSize(1920, 1080)
+            base.win.requestProperties(props)
+            self.fullscreen = True
+        else:
+            props = WindowProperties()
+            props.setFullscreen(0)
+            props.setSize(640, 480)
+            base.win.requestProperties(props)
+            self.fullscreen = False

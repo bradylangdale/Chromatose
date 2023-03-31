@@ -26,11 +26,11 @@ class MyApp(ShowBase):
         self.pipeline.enable_shadows = True
 
         # set the camera's lens to the one we just created
-        self.cam.node().getLens().setFov(90)
+        self.cam.node().getLens().setFov(120)
         self.cam.node().getLens().setNearFar(0.1, 10000)
         self.cam.setAntialias(AntialiasAttrib.MAuto)
 
-        self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1)
+        self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1, fg=(1, 1, 1, 1))
 
         # World
         self.world = BulletWorld()
@@ -89,7 +89,7 @@ class MyApp(ShowBase):
             self.objects.append(object)
 
         self.crystals = []
-        for i in range(10):
+        for i in range(100):
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                              random.uniform(0, 20)),
