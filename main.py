@@ -49,7 +49,7 @@ class MyApp(ShowBase):
 
         # Disable the camera trackball controls.
         self.disableMouse()
-        self.player = PlayerController(self.camera, self.win, self.world, self.worldNP)
+        self.player = PlayerController(self.camera, self.win)
 
         self.player.setPos(self.camera.getPos() - Vec3(0, 20, 0))
 
@@ -89,7 +89,7 @@ class MyApp(ShowBase):
             self.objects.append(object)
 
         self.crystals = []
-        for i in range(3):
+        for i in range(10):
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                              random.uniform(0, 20)),
@@ -111,9 +111,9 @@ class MyApp(ShowBase):
         self.add_task(self.update, 'update')
 
         # Add Billboard Enemy
-        self.billboard_enemy = BillBoardObject(self, "sprite.png", Vec3(0, 0, 8), scale=1.5)
-        self.billboard_enemy = BillBoardObject(self, "sprite.png", Vec3(2, 0, 10), scale=3)
-        self.billboard_enemy = BillBoardObject(self, "sprite.png", Vec3(2, 0, 10), scale=5)
+        self.billboard_enemy = BillBoardObject("sprite.png", Vec3(0, 0, 8), scale=1.5)
+        self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=3)
+        self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=5)
 
         self.gun = self.loader.loadModel('Assets/assets/Gun/Gun.bam')
         self.gun.setTwoSided(False, 1)
@@ -129,7 +129,7 @@ class MyApp(ShowBase):
         self.light.node().setColor((1.5, 1.5, 1.5, 1))
         #self.light.node().showFrustum()
         self.light.node().getLens().setFov(45)
-        self.light.node().getLens().setNearFar(1, 100)
+        self.light.node().getLens().setNearFar(1, 10000)
         self.light.setPos(0, -50, 50)
         self.light.lookAt(0, 10, 0)
         self.render.setLight(self.light)
@@ -139,7 +139,7 @@ class MyApp(ShowBase):
         self.render.setLight(self.alight)
 
         # Important! Enable the shader generator.
-        filters.setCartoonInk()
+        filters.setCartoonInk(2)
         filters.setSrgbEncode()
         filters.setHighDynamicRange()
         #filters.setExposureAdjust(0)
@@ -149,7 +149,8 @@ class MyApp(ShowBase):
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
 
-        rgb = Vec3(abs(self.player.vel.x), abs(self.player.vel.y), abs(self.player.vel.z)) / 4
+        vel = self.player.playerRB.getLinearVelocity()
+        rgb = Vec3(abs(vel.x), abs(vel.y), abs(self.player.vel.z)) / 4
 
         if self.r > 0:
             self.r -= 0.001
@@ -157,7 +158,7 @@ class MyApp(ShowBase):
             self.b -= 0.001
         #self.scene.setColorScale(self.r, self.g, self.b, 1.0)
         #self.scene.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
-        self.player.playerNP.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
+        self.player.gun.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
         for object in self.objects:
             object.np.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
 
