@@ -76,10 +76,6 @@ class MyApp(ShowBase):
         np.setPos(0, 0, -1.1)
         self.world.attachRigidBody(node)
 
-        self.r = 1.0
-        self.g = 1.0
-        self.b = 1.0
-
         self.objects = []
         for i in range(10):
             object = InteractableObject(self, self.world, self.worldNP,
@@ -93,19 +89,22 @@ class MyApp(ShowBase):
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                              random.uniform(0, 20)),
-                                        'Assets/assets/BlueCrystal/Blue.bam')
+                                        'Assets/assets/BlueCrystal/Blue.bam',
+                                        name='blue_crystal')
             self.crystals.append(object)
 
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                              random.uniform(0, 20)),
-                                        'Assets/assets/RedCrystal/red.bam')
+                                        'Assets/assets/RedCrystal/red.bam',
+                                        name='red_crystal')
             self.crystals.append(object)
 
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                              random.uniform(0, 20)),
-                                        'Assets/assets/GreenCrystal/green.bam')
+                                        'Assets/assets/GreenCrystal/green.bam',
+                                        name='green_crystal')
             self.crystals.append(object)
 
         self.add_task(self.update, 'update')
@@ -114,14 +113,6 @@ class MyApp(ShowBase):
         self.billboard_enemy = BillBoardObject("sprite.png", Vec3(0, 0, 8), scale=1.5)
         self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=3)
         self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=5)
-
-        self.gun = self.loader.loadModel('Assets/assets/Gun/Gun.bam')
-        self.gun.setTwoSided(False, 1)
-        self.gun.reparentTo(self.render)
-        self.gun.setPos(0, 0, 2)
-        self.gun.setScale(0.05, 0.05, 0.05)
-        self.gunMovement = self.gun.hprInterval(50, LPoint3(0, 360, 360))
-        self.gunMovement.loop()
 
         self.light = self.render.attachNewNode(Spotlight("Spot"))
         self.light.node().setScene(self.render)
@@ -142,25 +133,16 @@ class MyApp(ShowBase):
         filters.setCartoonInk(2)
         filters.setSrgbEncode()
         filters.setHighDynamicRange()
-        #filters.setExposureAdjust(0)
 
     # Update
     def update(self, task):
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
 
-        vel = self.player.playerRB.getLinearVelocity()
-        rgb = Vec3(abs(vel.x), abs(vel.y), abs(self.player.vel.z)) / 4
-
-        if self.r > 0:
-            self.r -= 0.001
-            self.g -= 0.001
-            self.b -= 0.001
-        #self.scene.setColorScale(self.r, self.g, self.b, 1.0)
-        #self.scene.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
-        self.player.gun.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
+        self.scene.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
+        self.player.gun.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         for object in self.objects:
-            object.np.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
+            object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
 
         return task.cont
 

@@ -26,6 +26,7 @@ class PlayerController(DirectObject):
         self.accept('f', self.toggle_fullscreen)
         self.add_task(self.move, "move")
         self.add_task(self.rotate, "rotate")
+        self.add_task(self.item_pickup, 'item_pickup')
 
         # Add Physics
         height = 3
@@ -58,6 +59,9 @@ class PlayerController(DirectObject):
         self.gun.setH(90)
         self.gun.setPos(0.7, 0.5, -0.35)
 
+        self.r = 0.0
+        self.g = 0.0
+        self.b = 0.0
         self.canJump = True
         self.fullscreen = False
 
@@ -126,6 +130,30 @@ class PlayerController(DirectObject):
                         (self.playerRBNode.getZ() - self.lastPos.z) / dt)
 
         self.lastPos = self.playerRBNode.getPos()
+
+        return Task.cont
+
+    def item_pickup(self, task):
+        contact = False
+
+        check = base.world.contactTest(self.playerRB)
+        for contact in check.getContacts():
+            point = contact.getManifoldPoint()
+
+            if 'red_crystal' in contact.getNode1().getName():
+                self.r += 0.1
+                contact.getNode1().removeAllChildren()
+                base.world.remove(contact.getNode1())
+
+            elif 'green_crystal' in contact.getNode1().getName():
+                self.g += 0.1
+                contact.getNode1().removeAllChildren()
+                base.world.remove(contact.getNode1())
+
+            elif 'blue_crystal' in contact.getNode1().getName():
+                self.b += 0.1
+                contact.getNode1().removeAllChildren()
+                base.world.remove(contact.getNode1())
 
         return Task.cont
 
