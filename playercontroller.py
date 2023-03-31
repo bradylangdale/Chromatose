@@ -46,6 +46,13 @@ class PlayerController(DirectObject):
         self.vel = Vec3(0, 0, 0)
         self.lastPos = self.playerNP.getPos()
 
+        self.gun = base.loader.loadModel('Assets/assets/Gun/Gun.bam')
+        self.gun.setTwoSided(False, 1)
+        self.gun.reparentTo(self.playerNP)
+        self.gun.setPos(0.7, 0.7, 0.5)
+        self.gun.setH(90)
+        self.gun.setScale(0.02, 0.02, 0.02)
+
     def setPos(self, vec3):
         self.playerNP.setPos(vec3)
 
@@ -60,6 +67,7 @@ class PlayerController(DirectObject):
         if self.win.movePointer(0, self.win.getXSize() // 2, self.win.getYSize() // 2):
             self.playerNP.setH(self.playerNP.getH() - (x - self.win.getXSize() / 2) * mouse_sens)
             self.camera.setP(self.camera.getP() - (y - self.win.getYSize() / 2) * mouse_sens)
+            self.gun.setR(-(self.camera.getP() - (y - self.win.getYSize() / 2) * mouse_sens))
         return Task.cont
 
     def move(self, task):
