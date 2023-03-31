@@ -1,5 +1,3 @@
-import random
-
 from direct.showbase.DirectObject import DirectObject
 from panda3d.bullet import BulletRigidBodyNode, BulletConvexHullShape
 from panda3d.core import Vec3
@@ -16,6 +14,7 @@ class InteractableObject(DirectObject):
         self.model = main.loader.loadModel(model)
         self.model.setScale(scale.x, scale.y, scale.z)
         self.model.setPos(-self.model.getBounds().getCenter())
+        self.model.setTwoSided(False, 1)
         self.model.flattenLight()
         self.model.clear_model_nodes()
         geom = self.model.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
