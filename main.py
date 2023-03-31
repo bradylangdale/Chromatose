@@ -103,7 +103,7 @@ class MyApp(ShowBase):
         self.light.node().setScene(self.render)
         self.light.node().setShadowCaster(True, 4096, 4096)
         self.light.node().setColor((1.5, 1.5, 1.5, 1))
-        self.light.node().showFrustum()
+        #self.light.node().showFrustum()
         self.light.node().getLens().setFov(45)
         self.light.node().getLens().setNearFar(1, 100)
         self.light.setPos(0, -50, 50)
@@ -131,6 +131,7 @@ class MyApp(ShowBase):
             self.r -= 0.001
             self.g -= 0.001
             self.b -= 0.001
+        #self.scene.setColorScale(self.r, self.g, self.b, 1.0)
         #self.scene.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
         for object in self.objects:
             object.np.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
