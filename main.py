@@ -32,6 +32,7 @@ class MyApp(ShowBase):
 
         # set the camera's lens to the one we just created
         self.cam.node().getLens().setFov(90)
+        self.cam.node().getLens().setNearFar(0.1, 10000)
         self.cam.setAntialias(AntialiasAttrib.MAuto)
 
         self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1)
@@ -133,6 +134,7 @@ class MyApp(ShowBase):
             self.b -= 0.001
         #self.scene.setColorScale(self.r, self.g, self.b, 1.0)
         #self.scene.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
+        self.player.playerNP.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
         for object in self.objects:
             object.np.setColorScale(rgb.x, rgb.y, rgb.z, 1.0)
 
