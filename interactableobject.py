@@ -21,7 +21,7 @@ class InteractableObject(DirectObject):
         shape = BulletConvexHullShape()
         shape.addGeom(geom)
         node = BulletRigidBodyNode()
-        node.setMass(1.0)
+        node.setMass(0.01)
         node.addShape(shape)
         self.np = main.render.attachNewNode(node)
         self.np.setPos(position)
