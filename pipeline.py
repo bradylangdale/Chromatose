@@ -10,8 +10,8 @@ from direct.filter.FilterManager import FilterManager
 class CustomPipeline:
 
     def __init__(self, *, render_node=None, window=None, camera_node=None, taskmgr=None, msaa_samples=4, max_lights=8,
-                 use_normal_maps=False, use_emission_maps=True, exposure=1.0, enable_shadows=False, enable_fog=False,
-                 use_occlusion_maps=False, use_330=None, use_hardware_skinning=None, sdr_lut=None, sdr_lut_factor=1.0,
+                 use_normal_maps=True, use_emission_maps=True, exposure=1.0, enable_shadows=True, enable_fog=False,
+                 use_occlusion_maps=True, use_330=None, use_hardware_skinning=None, sdr_lut=None, sdr_lut_factor=1.0,
                  manager=None):
 
         if render_node is None:
