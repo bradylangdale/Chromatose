@@ -2,6 +2,7 @@ from panda3d.core import TextureStage, CardMaker, Vec3, TransparencyAttrib, Text
 from direct.showbase.DirectObject import DirectObject
 from panda3d.bullet import BulletRigidBodyNode, BulletCapsuleShape
 
+
 class BillBoardObject(DirectObject):
 
     def __init__(self, main, texture_path="sprite.png", position=Vec3(0, 0, 1), scale=1):
@@ -22,11 +23,12 @@ class BillBoardObject(DirectObject):
         self.BillboardNP.setTexture(self.texture)
         self.BillboardNP.setTransparency(TransparencyAttrib.MAlpha)
         self.BillboardNP.setBillboardAxis()
+        self.BillboardNP.setShaderAuto()
 
         # Add Physics
         self.card_physics_node = BulletRigidBodyNode('Billboard')
         self.card_physics_node.setMass(0.001)
-        shape = BulletCapsuleShape(self.aspect_ratio * self.scale, self.scale*1.5, 2)
+        shape = BulletCapsuleShape(self.aspect_ratio * self.scale, self.scale * 1.5, 2)
         self.card_physics_node.addShape(shape)
         self.main.world.attachRigidBody(self.card_physics_node)
         self.card_physics_np = self.main.render.attachNewNode(self.card_physics_node)
@@ -35,4 +37,3 @@ class BillBoardObject(DirectObject):
 
         # Make item upright
         self.card_physics_node.setAngularFactor(Vec3(0, 0, 1))
-
