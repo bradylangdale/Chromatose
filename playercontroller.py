@@ -65,6 +65,7 @@ class PlayerController(DirectObject):
         self.canJump = True
         self.fullscreen = False
 
+        # Loading sound effects
         self.redChime = base.loader.loadSfx("Assets/assets/Sound/Effects/redChime.mp3")
         self.greenChime = base.loader.loadSfx("Assets/assets/Sound/Effects/greenChime.mp3")
         self.blueChime = base.loader.loadSfx("Assets/assets/Sound/Effects/blueChime.mp3")
@@ -76,6 +77,12 @@ class PlayerController(DirectObject):
 
         self.windEffect = base.loader.loadSfx("Assets/assets/Sound/Effects/wind.mp3")
         self.windEffect.setLoop(True)
+
+        self.smallHeartbeat = base.loader.loadSfx("Assets/assets/Sound/Effects/smallHeartbeat.mp3")
+        self.smallHeartbeat.setLoop(True)
+
+        self.bigHeartbeat = base.loader.loadSfx("Assets/assets/Sound/Effects/bigHeartbeat.mp3")
+        self.bigHeartbeat.setLoop(True)
 
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
@@ -126,17 +133,6 @@ class PlayerController(DirectObject):
                 self.canJump = False
                 self.currentState['jump'] = False
 
-        if contact and self.currentState["forward"] or self.currentState["backward"] or self.currentState["left"] or self.currentState["right"]:
-            if self.footsteps.status() != AudioSound.PLAYING:
-                self.footsteps.play()
-        else:
-            self.footsteps.stop()
-
-        if not contact and self.windEffect.status() != AudioSound.PLAYING:
-            self.windEffect.play()
-        elif contact:
-            self.windEffect.stop()
-
         if speed.length() > 0:
             self.playerRB.applyCentralForce(speed)
             self.playerRB.setLinearDamping(0.3)
@@ -154,6 +150,30 @@ class PlayerController(DirectObject):
                         (self.playerRBNode.getZ() - self.lastPos.z) / dt)
 
         self.lastPos = self.playerRBNode.getPos()
+
+        # Playing movement and status sounds
+        if contact and self.currentState["forward"] or self.currentState["backward"] or self.currentState["left"] or self.currentState["right"]:
+            if self.footsteps.status() != AudioSound.PLAYING:
+                self.footsteps.play()
+        else:
+            self.footsteps.stop()
+
+        if not contact and self.windEffect.status() != AudioSound.PLAYING:
+            self.windEffect.play()
+        elif contact:
+            self.windEffect.stop()
+        
+        if self.r < 0.1:
+            self.smallHeartbeat.stop()
+            if self.bigHeartbeat.status() != AudioSound.PLAYING:
+                self.bigHeartbeat.play()
+        elif self.r < 0.3:
+            self.bigHeartbeat.stop()
+            if self.smallHeartbeat.status() != AudioSound.PLAYING:
+                self.smallHeartbeat.play()
+        else:
+            self.smallHeartbeat.stop()
+            self.bigHeartbeat.stop()
 
         return Task.cont
 
