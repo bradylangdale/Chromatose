@@ -4,7 +4,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
 from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode
-from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties
+from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound
 
 
 class PlayerController(DirectObject):
@@ -65,6 +65,18 @@ class PlayerController(DirectObject):
         self.canJump = True
         self.fullscreen = False
 
+        self.redChime = base.loader.loadSfx("Assets/assets/Sound/Effects/redChime.mp3")
+        self.greenChime = base.loader.loadSfx("Assets/assets/Sound/Effects/greenChime.mp3")
+        self.blueChime = base.loader.loadSfx("Assets/assets/Sound/Effects/blueChime.mp3")
+
+        self.footsteps = base.loader.loadSfx("Assets/assets/Sound/Effects/footsteps.mp3")
+        self.footsteps.setLoop(True)
+
+        self.jumpEffect = base.loader.loadSfx("Assets/assets/Sound/Effects/jumpEffect.mp3")
+
+        self.windEffect = base.loader.loadSfx("Assets/assets/Sound/Effects/wind.mp3")
+        self.windEffect.setLoop(True)
+
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
 
@@ -109,9 +121,21 @@ class PlayerController(DirectObject):
             speed += self.scale(3.0, right)
         if self.currentState['jump']:
             if self.canJump:
+                self.jumpEffect.play()
                 speed.setZ(70)
                 self.canJump = False
                 self.currentState['jump'] = False
+
+        if contact and self.currentState["forward"] or self.currentState["backward"] or self.currentState["left"] or self.currentState["right"]:
+            if self.footsteps.status() != AudioSound.PLAYING:
+                self.footsteps.play()
+        else:
+            self.footsteps.stop()
+
+        if not contact and self.windEffect.status() != AudioSound.PLAYING:
+            self.windEffect.play()
+        elif contact:
+            self.windEffect.stop()
 
         if speed.length() > 0:
             self.playerRB.applyCentralForce(speed)
@@ -141,16 +165,19 @@ class PlayerController(DirectObject):
             point = contact.getManifoldPoint()
 
             if 'red_crystal' in contact.getNode1().getName():
+                self.redChime.play()
                 self.r += 0.1
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'green_crystal' in contact.getNode1().getName():
+                self.greenChime.play()
                 self.g += 0.1
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'blue_crystal' in contact.getNode1().getName():
+                self.blueChime.play()
                 self.b += 0.1
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
