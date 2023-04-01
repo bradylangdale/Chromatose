@@ -1,19 +1,17 @@
-from math import sin, pi, cos
+from math import sin, pi, cos, copysign
 
 from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
-from panda3d.bullet import BulletCharacterControllerNode, BulletCapsuleShape, ZUp
-from panda3d.core import NodePath, BitMask32, Vec3
+from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode
+from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties
 
 
 class PlayerController(DirectObject):
-    def __init__(self, camera: NodePath, win, world, worldNP):
+    def __init__(self, camera: NodePath, win, position=Vec3(0, 0, 0)):
         DirectObject.__init__(self)
         self.camera = camera
         self.win = win
-        self.world = world
-        self.worldNP = worldNP
 
         self.currentState = {"forward": False, "backward": False, "left": False, "right": False, 'jump': False}
         self.accept("w", self.toggle_move_state, ["forward", True])
@@ -25,29 +23,50 @@ class PlayerController(DirectObject):
         self.accept("d", self.toggle_move_state, ["right", True])
         self.accept("d-up", self.toggle_move_state, ["right", False])
         self.accept('space', self.toggle_move_state, ['jump', True])
+        self.accept('f', self.toggle_fullscreen)
         self.add_task(self.move, "move")
         self.add_task(self.rotate, "rotate")
+        self.add_task(self.item_pickup, 'item_pickup')
 
-        height = 1.75
+        # Add Physics
+        height = 3
         radius = 0.4
         shape = BulletCapsuleShape(radius, height - 2 * radius, ZUp)
-
-        self.playerNode = BulletCharacterControllerNode(shape, 0.4, 'Player')
-        self.playerNP = self.worldNP.attachNewNode(self.playerNode)
-        self.playerNP.setPos(-2, 0, 14)
-        self.playerNP.setH(45)
-        self.camera.reparentTo(self.playerNP)
+        self.playerRB = BulletRigidBodyNode('Billboard')
+        self.playerRB.setMass(0.1)
+        self.playerRB.addShape(shape)
+        base.world.attachRigidBody(self.playerRB)
+        self.playerRBNode = base.render.attachNewNode(self.playerRB)
+        self.playerRBNode.setPos(position)
+        self.playerRBNode.setCollideMask(BitMask32.allOn())
+        self.camera.reparentTo(self.playerRBNode)
         self.camera.setPos(0, 0, 1)
-        self.playerNP.setCollideMask(BitMask32.allOn())
-        self.playerNode.setMaxJumpHeight(8.0)
-        self.playerNode.setJumpSpeed(6.0)
 
-        self.world.attachCharacter(self.playerNP.node())
-        self.vel = Vec3(0, 0, 0)
-        self.lastPos = self.playerNP.getPos()
+        # Make item upright
+        self.playerRB.setAngularFactor(Vec3(0, 0, 0))
+        self.playerRB.setFriction(0.7)
+        self.playerRB.setLinearSleepThreshold(0)
+        self.playerRB.setLinearDamping(0.3)
+
+        self.lastPos = self.playerRBNode.getPos()
+
+        self.gun = base.loader.loadModel('Assets/assets/Gun/Gun.bam')
+        self.gun.setTwoSided(False, 1)
+        self.gun.setScale(0.02, 0.02, 0.02)
+        self.gun.flattenLight()
+        self.gun.clear_model_nodes()
+        self.gun.reparentTo(self.camera)
+        self.gun.setH(90)
+        self.gun.setPos(0.7, 0.5, -0.35)
+
+        self.r = 0.0
+        self.g = 0.0
+        self.b = 0.0
+        self.canJump = True
+        self.fullscreen = False
 
     def setPos(self, vec3):
-        self.playerNP.setPos(vec3)
+        self.playerRBNode.setPos(vec3)
 
     def toggle_move_state(self, key, value):
         self.currentState[key] = value
@@ -58,37 +77,102 @@ class PlayerController(DirectObject):
         x = md.getX()
         y = md.getY()
         if self.win.movePointer(0, self.win.getXSize() // 2, self.win.getYSize() // 2):
-            self.playerNP.setH(self.playerNP.getH() - (x - self.win.getXSize() / 2) * mouse_sens)
+            self.camera.setH(self.camera.getH() - (x - self.win.getXSize() / 2) * mouse_sens)
             self.camera.setP(self.camera.getP() - (y - self.win.getYSize() / 2) * mouse_sens)
         return Task.cont
 
     def move(self, task):
         forwards = Vec3(cos((90 + self.camera.getH()) / 180 * pi), sin((90 + self.camera.getH()) / 180 * pi),
-                        0).normalized()
-        right = Vec3(cos(self.camera.getH() / 180 * pi), sin(self.camera.getH() / 180 * pi), 0).normalized()
+                        0)
+        right = Vec3(cos(self.camera.getH() / 180 * pi), sin(self.camera.getH() / 180 * pi), 0)
         speed = Vec3(0, 0, 0)
+        current_speed = self.playerRB.getLinearVelocity()
+        current_forward = self.signedMag(Vec3(current_speed.x * forwards.x, current_speed.y * forwards.y, 0))
+        current_right = self.signedMag(Vec3(current_speed.x * right.x, current_speed.y * right.y, 0))
 
-        if self.currentState["forward"]:
-            speed.setY(self.scale(15.0, forwards).length())
-        if self.currentState["backward"]:
-            speed.setY(-self.scale(15.0, forwards).length())
-        if self.currentState["left"]:
-            speed.setX(-self.scale(10.0, right).length())
-        if self.currentState["right"]:
-            speed.setX(self.scale(10.0, right).length())
+        contact = False
+
+        check = base.world.contactTest(self.playerRB)
+        for contact in check.getContacts():
+            point = contact.getManifoldPoint()
+            if point.getLocalPointA().z < -0.1:
+                contact = True
+                self.canJump = True
+
+        if self.currentState["forward"] and 15 > current_forward:
+            speed += self.scale(3.0, forwards)
+        if self.currentState["backward"] and -15 < current_forward:
+            speed -= self.scale(3.0, forwards)
+        if self.currentState["left"] and -15 < current_right:
+            speed -= self.scale(3.0, right)
+        if self.currentState["right"] and 15 > current_right:
+            speed += self.scale(3.0, right)
         if self.currentState['jump']:
-            self.playerNode.doJump()
-            self.currentState['jump'] = False
+            if self.canJump:
+                speed.setZ(70)
+                self.canJump = False
+                self.currentState['jump'] = False
 
-        self.playerNode.setLinearMovement(speed, True)
+        if speed.length() > 0:
+            self.playerRB.applyCentralForce(speed)
+            self.playerRB.setLinearDamping(0.3)
+            self.playerRB.setFriction(0.7)
+        elif contact:
+            self.playerRB.setLinearDamping(0.9)
+            self.playerRB.setFriction(0.9)
+        else:
+            self.playerRB.setLinearDamping(0.3)
+            self.playerRB.setFriction(0.3)
+
         dt = globalClock.getDt()
-        self.vel = Vec3((self.playerNP.getX() - self.lastPos.x) / dt,
-                        (self.playerNP.getY() - self.lastPos.y) / dt,
-                        (self.playerNP.getZ() - self.lastPos.z) / dt)
+        self.vel = Vec3((self.playerRBNode.getX() - self.lastPos.x) / dt,
+                        (self.playerRBNode.getY() - self.lastPos.y) / dt,
+                        (self.playerRBNode.getZ() - self.lastPos.z) / dt)
 
-        self.lastPos = self.playerNP.getPos()
+        self.lastPos = self.playerRBNode.getPos()
+
+        return Task.cont
+
+    def item_pickup(self, task):
+        contact = False
+
+        check = base.world.contactTest(self.playerRB)
+        for contact in check.getContacts():
+            point = contact.getManifoldPoint()
+
+            if 'red_crystal' in contact.getNode1().getName():
+                self.r += 0.1
+                contact.getNode1().removeAllChildren()
+                base.world.remove(contact.getNode1())
+
+            elif 'green_crystal' in contact.getNode1().getName():
+                self.g += 0.1
+                contact.getNode1().removeAllChildren()
+                base.world.remove(contact.getNode1())
+
+            elif 'blue_crystal' in contact.getNode1().getName():
+                self.b += 0.1
+                contact.getNode1().removeAllChildren()
+                base.world.remove(contact.getNode1())
 
         return Task.cont
 
     def scale(self, s, v):
         return Vec3(s * v.x, s * v.y, s * v.z)
+
+    def signedMag(self, vec):
+        return copysign(1, vec.x + vec.y) * vec.length()
+
+    def toggle_fullscreen(self):
+        if not self.fullscreen:
+            props = WindowProperties()
+            props.setFullscreen(1)
+            props.setSize(1920, 1080)
+            base.win.requestProperties(props)
+            self.fullscreen = True
+        else:
+            props = WindowProperties()
+            props.setFullscreen(0)
+            props.setSize(640, 480)
+            base.win.requestProperties(props)
+            self.fullscreen = False
