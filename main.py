@@ -194,6 +194,12 @@ class MyApp(ShowBase):
         filters.setExposureAdjust(0.5)
         filters.setBloom((0.4, 0.4, 0.8, 0.2), desat=0.1, mintrigger=0.01, intensity=0.3, size='medium')
 
+        # loading and playing music
+        mysteryMusic = base.loader.loadSfx("Assets/assets/Sound/Music/mystery.mp3")
+        mysteryMusic.setLoop(True)
+        mysteryMusic.setVolume(0.1)
+        mysteryMusic.play()
+
     # Update
     def update(self, task):
         dt = globalClock.getDt()
