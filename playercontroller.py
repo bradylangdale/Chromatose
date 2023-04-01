@@ -59,9 +59,9 @@ class PlayerController(DirectObject):
         self.gun.setH(90)
         self.gun.setPos(0.7, 0.5, -0.35)
 
-        self.r = 0.0
-        self.g = 0.0
-        self.b = 0.0
+        self.r = 1.0
+        self.g = 1.0
+        self.b = 1.0
         self.canJump = True
         self.fullscreen = False
 

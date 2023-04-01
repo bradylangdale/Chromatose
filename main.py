@@ -1,5 +1,6 @@
 import random
 
+from direct.interval.MetaInterval import Sequence, Parallel
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
@@ -54,8 +55,64 @@ class MyApp(ShowBase):
         self.player.setPos(self.camera.getPos() - Vec3(0, 20, 0))
 
         # Load Map Mesh
-        self.scene = self.loader.loadModel("Assets/assets/Map/Map2.glb")
+        mScale = 3
+        self.floor = self.loader.loadModel("Assets/assets/Mapv2/Floor/floor.bam")
+        self.floor.setTwoSided(False, 1)
+        self.floor.setScale(mScale, mScale, mScale)
+        self.floor.clear_model_nodes()
+        self.floor.flatten_strong()
+        geom = self.floor.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)
+        node = BulletRigidBodyNode('Ground')
+        node.addShape(shape)
+        self.np = self.render.attachNewNode(node)
+        self.world.attachRigidBody(node)
+        self.floor.reparentTo(self.np)
+
+        self.colorPlane = self.loader.loadModel("Assets/assets/Mapv2/ColorPlane/colorplane.bam")
+        self.colorPlane.setTwoSided(False, 1)
+        self.colorPlane.setScale(mScale, mScale, mScale)
+        self.colorPlane.clear_model_nodes()
+        self.colorPlane.flatten_strong()
+        colorRotate = self.colorPlane.hprInterval(50, LPoint3(360, 0, 0))
+        colorMove1 = self.colorPlane.posInterval(10, LPoint3(0, -15, 0))
+        colorMove2 = self.colorPlane.posInterval(10, LPoint3(-15, 0, 0))
+        colorMove3 = self.colorPlane.posInterval(10, LPoint3(0, 15, 0))
+        colorMove4 = self.colorPlane.posInterval(10, LPoint3(15, 0, 0))
+        colorMove5 = self.colorPlane.posInterval(10, LPoint3(0, 0, 0))
+        colorMovement = Sequence(colorMove1, colorMove2, colorMove3, colorMove4, colorMove5)
+        self.colorAnimation = Parallel(colorMovement, colorRotate)
+        self.colorAnimation.loop()
+        geom = self.colorPlane.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)
+        node = BulletRigidBodyNode('Ground')
+        node.addShape(shape)
+        self.np = self.render.attachNewNode(node)
+        self.world.attachRigidBody(node)
+        self.colorPlane.reparentTo(self.np)
+
+        self.scene = self.loader.loadModel("Assets/assets/Mapv2/Walls/wall.bam")
         self.scene.setTwoSided(False, 1)
+        self.scene.setScale(mScale, mScale, mScale)
+        self.scene.clear_model_nodes()
+        self.scene.flatten_strong()
+        geom = self.scene.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)
+        node = BulletRigidBodyNode('Ground')
+        node.addShape(shape)
+        self.np = self.render.attachNewNode(node)
+        self.world.attachRigidBody(node)
+        self.scene.reparentTo(self.np)
+
+        self.scene = self.loader.loadModel("Assets/assets/Mapv2/Pillar/pillar.bam")
+        self.scene.setTwoSided(False, 1)
+        self.scene.setScale(mScale, mScale, mScale)
         self.scene.clear_model_nodes()
         self.scene.flatten_strong()
         geom = self.scene.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
@@ -77,7 +134,7 @@ class MyApp(ShowBase):
         self.world.attachRigidBody(node)
 
         self.objects = []
-        for i in range(10):
+        for i in range(2):
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
                                         'Assets/assets/Gun/Gun.bam',
@@ -85,7 +142,7 @@ class MyApp(ShowBase):
             self.objects.append(object)
 
         self.crystals = []
-        for i in range(100):
+        for i in range(1):
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                              random.uniform(0, 20)),
@@ -110,19 +167,19 @@ class MyApp(ShowBase):
         self.add_task(self.update, 'update')
 
         # Add Billboard Enemy
-        self.billboard_enemy = BillBoardObject("sprite.png", Vec3(0, 0, 8), scale=1.5)
-        self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=3)
-        self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=5)
+        #self.billboard_enemy = BillBoardObject("sprite.png", Vec3(0, 0, 8), scale=1.5)
+        #self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=3)
+        #self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=5)
 
         self.light = self.render.attachNewNode(Spotlight("Spot"))
         self.light.node().setScene(self.render)
         self.light.node().setShadowCaster(True, 4096, 4096)
         self.light.node().setColor((1.5, 1.5, 1.5, 1))
         #self.light.node().showFrustum()
-        self.light.node().getLens().setFov(45)
+        self.light.node().getLens().setFov(90)
         self.light.node().getLens().setNearFar(1, 10000)
-        self.light.setPos(0, -50, 50)
-        self.light.lookAt(0, 10, 0)
+        self.light.setPos(0, 50, 100)
+        self.light.lookAt(0, 15, 0)
         self.render.setLight(self.light)
 
         self.alight = self.render.attachNewNode(AmbientLight("Ambient"))
@@ -130,9 +187,12 @@ class MyApp(ShowBase):
         self.render.setLight(self.alight)
 
         # Important! Enable the shader generator.
-        filters.setCartoonInk(2)
+        filters.setCartoonInk(1)
         filters.setSrgbEncode()
         filters.setHighDynamicRange()
+        filters.setGammaAdjust(1.5)
+        filters.setExposureAdjust(0.5)
+        filters.setBloom((0.4, 0.4, 0.8, 0.2), desat=0.1, mintrigger=0.01, intensity=0.3, size='medium')
 
     # Update
     def update(self, task):
