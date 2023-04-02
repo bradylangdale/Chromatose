@@ -9,6 +9,7 @@ from direct.gui.DirectGui import *
 from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, BulletTriangleMesh, \
     BulletTriangleMeshShape, BulletPlaneShape, BulletConvexHullShape
 
+from crystalobject import CrystalObject
 from interactableobject import InteractableObject
 from pipeline import CustomPipeline
 from playercontroller import PlayerController
@@ -129,23 +130,23 @@ class MyApp(ShowBase):
 
         self.crystals = []
         for i in range(10):
-            object = InteractableObject(self, self.world, self.worldNP,
+            object = CrystalObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                             random.uniform(0, 20)),
+                                             random.uniform(1, 10)),
                                         'Assets/assets/BlueCrystal/Blue.bam',
                                         name='blue_crystal')
             self.crystals.append(object)
 
-            object = InteractableObject(self, self.world, self.worldNP,
+            object = CrystalObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                             random.uniform(0, 20)),
+                                             random.uniform(1, 10)),
                                         'Assets/assets/RedCrystal/red.bam',
                                         name='red_crystal')
             self.crystals.append(object)
 
-            object = InteractableObject(self, self.world, self.worldNP,
+            object = CrystalObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                             random.uniform(0, 20)),
+                                             random.uniform(1, 10)),
                                         'Assets/assets/GreenCrystal/green.bam',
                                         name='green_crystal')
             self.crystals.append(object)
@@ -202,7 +203,7 @@ class MyApp(ShowBase):
         #self.updateColors(self.colorPlane, [-3, -5, -1.5], [1, 1, 1])  # use with directional
         self.updateColors(self.colorPlane, [0, 0, 0], [1, 1, 1])  # use with spotlight
         self.updateColors(self.walls, [-140, -110, -90], [1, 1, 1])
-        self.updateColors(self.pillar, [-140, -110, -90], [1, 1, 1])
+        self.updateColors(self.pillar, [-6, -6, -6], [1, 1, 1])
 
         self.player.gun.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         for object in self.objects:
