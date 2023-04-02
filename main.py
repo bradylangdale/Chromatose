@@ -171,9 +171,9 @@ class MyApp(ShowBase):
             self.crystals.append(object)
 
         # Add Billboard Enemy
-        # self.billboard_enemy = BillBoardObject("sprite.png", Vec3(0, 0, 8), scale=1.5)
-        # self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=3)
-        # self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=5)
+        self.billboard_enemy = BillBoardObject(resource_path('Assets/assets/GreenEnemy/base.png'), Vec3(0, 5, 8), scale=1.5)
+        self.billboard_enemy = BillBoardObject(resource_path('Assets/assets/RedEnemy/base.png'), Vec3(2, -5, 8), scale=1.5)
+        self.billboard_enemy = BillBoardObject(resource_path('Assets/assets/BlueEnemy/base.png'), Vec3(2, 0, 8), scale=1.5)
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
