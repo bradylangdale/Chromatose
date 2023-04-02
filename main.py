@@ -12,6 +12,7 @@ from interactableobject import InteractableObject
 from pipeline import CustomPipeline
 from playercontroller import PlayerController
 from billboardobject import BillBoardObject
+from pausemenu import PauseMenu
 
 DEBUG = False
 
@@ -184,16 +185,20 @@ class MyApp(ShowBase):
         mysteryMusic.setVolume(0.1)
         mysteryMusic.play()
 
+        # Pause menu
+        self.pauseMenu = PauseMenu(self)
+
+
     # Update
     def update(self, task):
+        if self.pauseMenu.paused:
+            return task.cont
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
-
         self.scene.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         self.player.gun.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         for object in self.objects:
             object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
-
         return task.cont
 
 

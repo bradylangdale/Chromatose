@@ -84,6 +84,8 @@ class PlayerController(DirectObject):
         self.bigHeartbeat = base.loader.loadSfx("Assets/assets/Sound/Effects/bigHeartbeat.mp3")
         self.bigHeartbeat.setLoop(True)
 
+        # Pause
+        self.paused = False
         self.jumping = False
         self.jumpCD = 0
 
@@ -94,6 +96,8 @@ class PlayerController(DirectObject):
         self.currentState[key] = value
 
     def rotate(self, task):
+        if self.paused:
+            return Task.cont
         mouse_sens = 0.05
         md = self.win.getPointer(0)
         x = md.getX()
@@ -104,6 +108,8 @@ class PlayerController(DirectObject):
         return Task.cont
 
     def move(self, task):
+        if self.paused:
+            return Task.cont
         forwards = Vec3(cos((90 + self.camera.getH()) / 180 * pi), sin((90 + self.camera.getH()) / 180 * pi),
                         0)
         right = Vec3(cos(self.camera.getH() / 180 * pi), sin(self.camera.getH() / 180 * pi), 0)
