@@ -57,7 +57,7 @@ class MyApp(ShowBase):
         self.player.setPos(self.camera.getPos() - Vec3(0, 20, 0))
 
         # Load Map Mesh
-        mScale = 3
+        mScale = 4
         self.floor = self.loader.loadModel("Assets/assets/Mapv2/Floor/floor.bam")
         self.floor.setTwoSided(False, 1)
         self.floor.setScale(mScale, mScale, mScale)
@@ -70,6 +70,7 @@ class MyApp(ShowBase):
         self.colorPlane.setScale(mScale, mScale, mScale)
         self.colorPlane.clear_model_nodes()
         self.colorPlane.flatten_strong()
+        self.colorPlane.setShaderAuto()
         colorRotate = self.colorPlane.hprInterval(50, LPoint3(360, 0, 0))
         colorMove1 = self.colorPlane.posInterval(10, LPoint3(0, -15, 0))
         colorMove2 = self.colorPlane.posInterval(10, LPoint3(-15, 0, 0))
@@ -115,7 +116,7 @@ class MyApp(ShowBase):
         node = BulletRigidBodyNode('Ground')
         node.addShape(shape)
         np = self.render.attachNewNode(node)
-        np.setPos(0, 0, -0.55)
+        np.setPos(0, 0, -0.4)
         self.world.attachRigidBody(node)
 
         self.objects = []
@@ -170,12 +171,12 @@ class MyApp(ShowBase):
         self.render.setLight(self.alight)
 
         # Important! Enable the shader generator.
-        filters.setCartoonInk(1)
+        #filters.setCartoonInk(1)
         filters.setSrgbEncode()
         filters.setHighDynamicRange()
         filters.setGammaAdjust(1.4)
         filters.setExposureAdjust(0.5)
-        filters.setBloom((0.4, 0.4, 0.8, 0.2), desat=0.1, mintrigger=0.01, intensity=0.3, size='medium')
+        filters.setBloom((0.4, 0.4, 0.8, 0.2), desat=0.1, mintrigger=0.01, intensity=0.5, size='medium')
 
         # loading and playing music
         mysteryMusic = base.loader.loadSfx("Assets/assets/Sound/Music/mystery.mp3")
@@ -198,7 +199,8 @@ class MyApp(ShowBase):
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
 
-        self.updateColors(self.colorPlane, [-3, -5, -1.5], [1, 1, 1])
+        #self.updateColors(self.colorPlane, [-3, -5, -1.5], [1, 1, 1])  # use with directional
+        self.updateColors(self.colorPlane, [0, 0, 0], [1, 1, 1])  # use with spotlight
         self.updateColors(self.walls, [-140, -110, -90], [1, 1, 1])
         self.updateColors(self.pillar, [-140, -110, -90], [1, 1, 1])
 
