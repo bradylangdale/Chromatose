@@ -4,8 +4,7 @@ from direct.interval.MetaInterval import Sequence, Parallel
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
-from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, AmbientLight, LVector4, LPoint3, DirectionalLight, \
-    Spotlight
+from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, AmbientLight, LVector4, LPoint3, Spotlight
 from direct.gui.DirectGui import *
 from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, BulletTriangleMesh, \
     BulletTriangleMeshShape, BulletPlaneShape, BulletConvexHullShape
@@ -155,14 +154,6 @@ class MyApp(ShowBase):
         # self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=3)
         # self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=5)
 
-        '''self.light = self.render.attachNewNode(DirectionalLight("Sun"))
-        self.light.node().setScene(self.render)
-        self.light.node().setColor((1, 1, 1, 1))
-        self.light.node().getLens().setNearFar(1, 10000)
-        self.light.setPos(-15, -15, 100)
-        self.light.lookAt(0, 15, 0)
-        self.render.setLight(self.light)'''
-
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
         self.light.node().setShadowCaster(True, 4096, 4096)
@@ -199,8 +190,6 @@ class MyApp(ShowBase):
         print(self.colorPlane.getColorScale())
         print(self.walls.getColorScale())
         print(self.pillar.getColorScale())
-
-        #self.walls.setColor(100, 100, 100, 0)
 
     # Update
     def update(self, task):
