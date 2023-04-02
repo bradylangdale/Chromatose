@@ -86,6 +86,8 @@ class PlayerController(DirectObject):
 
         # Pause
         self.paused = False
+        self.jumping = False
+        self.jumpCD = 0
 
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
@@ -119,11 +121,13 @@ class PlayerController(DirectObject):
         contact = False
 
         check = base.world.contactTest(self.playerRB)
-        for contact in check.getContacts():
-            point = contact.getManifoldPoint()
-            if point.getLocalPointA().z < -0.1:
+        for collider in check.getContacts():
+            point = collider.getManifoldPoint()
+            if point.getLocalPointA().z < -0.5:
                 contact = True
-                self.canJump = True
+
+                if not 'Walls' in collider.getNode1().getName() and self.jumpCD < 0:
+                    self.canJump = True
 
         if self.currentState["forward"] and 15 > current_forward:
             speed += self.scale(3.0, forwards)
@@ -136,9 +140,22 @@ class PlayerController(DirectObject):
         if self.currentState['jump']:
             if self.canJump:
                 self.jumpEffect.play()
-                speed.setZ(70)
                 self.canJump = False
+                self.jumping = True
                 self.currentState['jump'] = False
+                speed.setZ(70)
+                self.jumpCD = 1
+            elif not self.canJump:
+                self.currentState['jump'] = False
+
+        if self.jumping and current_speed.z < 0.1:
+            speed.setZ(70)
+            self.jumpCD = 1
+        else:
+            self.jumping = False
+
+        if self.jumpCD > 0:
+            self.jumpCD -= 0.05
 
         if speed.length() > 0:
             self.playerRB.applyCentralForce(speed)
@@ -159,7 +176,8 @@ class PlayerController(DirectObject):
         self.lastPos = self.playerRBNode.getPos()
 
         # Playing movement and status sounds
-        if contact and self.currentState["forward"] or self.currentState["backward"] or self.currentState["left"] or self.currentState["right"]:
+        if contact and self.currentState["forward"] or self.currentState["backward"] or self.currentState["left"] or \
+                self.currentState["right"]:
             if self.footsteps.status() != AudioSound.PLAYING:
                 self.footsteps.play()
         else:
@@ -169,7 +187,7 @@ class PlayerController(DirectObject):
             self.windEffect.play()
         elif contact:
             self.windEffect.stop()
-        
+
         if self.r < 0.1:
             self.smallHeartbeat.stop()
             if self.bigHeartbeat.status() != AudioSound.PLAYING:
