@@ -1,10 +1,13 @@
+import os
 import random
+import sys
 
 from direct.interval.MetaInterval import Sequence, Parallel
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
-from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, AmbientLight, LVector4, LPoint3, Spotlight
+from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, AmbientLight, LVector4, LPoint3, Spotlight, \
+    loadPrcFile
 from direct.gui.DirectGui import *
 from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, BulletTriangleMesh, \
     BulletTriangleMeshShape, BulletPlaneShape, BulletConvexHullShape
@@ -15,6 +18,22 @@ from pipeline import CustomPipeline
 from playercontroller import PlayerController
 from billboardobject import BillBoardObject
 from pausemenu import PauseMenu
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    path = '/' + os.path.join(base_path, relative_path).replace('\\', '/').replace('C:', 'c')
+    return path
+
+
+loadPrcFile(resource_path('Config.prc'))
+loadPrcFile(resource_path('Confauto.prc'))
 
 DEBUG = False
 
@@ -59,14 +78,14 @@ class MyApp(ShowBase):
 
         # Load Map Mesh
         mScale = 4
-        self.floor = self.loader.loadModel("Assets/assets/Mapv2/Floor/floor.bam")
+        self.floor = self.loader.loadModel(resource_path("Assets/assets/Mapv2/Floor/floor.bam"))
         self.floor.setTwoSided(False, 1)
         self.floor.setScale(mScale, mScale, mScale)
         self.floor.clear_model_nodes()
         self.floor.flatten_strong()
         self.floor.reparentTo(self.render)
 
-        self.colorPlane = self.loader.loadModel("Assets/assets/Mapv2/ColorPlane/colorplane.bam")
+        self.colorPlane = self.loader.loadModel(resource_path("Assets/assets/Mapv2/ColorPlane/colorplane.bam"))
         self.colorPlane.setTwoSided(False, 1)
         self.colorPlane.setScale(mScale, mScale, mScale)
         self.colorPlane.clear_model_nodes()
@@ -83,7 +102,7 @@ class MyApp(ShowBase):
         self.colorAnimation.loop()
         self.colorPlane.reparentTo(self.render)
 
-        self.walls = self.loader.loadModel("Assets/assets/Mapv2/Walls/wall.bam")
+        self.walls = self.loader.loadModel(resource_path("Assets/assets/Mapv2/Walls/wall.bam"))
         self.walls.setTwoSided(False, 1)
         self.walls.setScale(mScale, mScale, mScale)
         self.walls.clear_model_nodes()
@@ -98,7 +117,7 @@ class MyApp(ShowBase):
         self.world.attachRigidBody(node)
         self.walls.reparentTo(self.np)
 
-        self.pillar = self.loader.loadModel("Assets/assets/Mapv2/Pillar/pillar.bam")
+        self.pillar = self.loader.loadModel(resource_path("Assets/assets/Mapv2/Pillar/pillar.bam"))
         self.pillar.setTwoSided(False, 1)
         self.pillar.setScale(mScale, mScale, mScale)
         self.pillar.clear_model_nodes()
@@ -124,31 +143,31 @@ class MyApp(ShowBase):
         for i in range(2):
             object = InteractableObject(self, self.world, self.worldNP,
                                         Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
-                                        'Assets/assets/Gun/Gun.bam',
+                                        resource_path('Assets/assets/Gun/Gun.bam'),
                                         scale=Vec3(0.02, 0.02, 0.02))
             self.objects.append(object)
 
         self.crystals = []
         for i in range(10):
             object = CrystalObject(self, self.world, self.worldNP,
-                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                             random.uniform(1, 10)),
-                                        'Assets/assets/BlueCrystal/Blue.bam',
-                                        name='blue_crystal')
+                                   Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+                                        random.uniform(1, 10)),
+                                   resource_path('Assets/assets/BlueCrystal/Blue.bam'),
+                                   name='blue_crystal')
             self.crystals.append(object)
 
             object = CrystalObject(self, self.world, self.worldNP,
-                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                             random.uniform(1, 10)),
-                                        'Assets/assets/RedCrystal/red.bam',
-                                        name='red_crystal')
+                                   Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+                                        random.uniform(1, 10)),
+                                   resource_path('Assets/assets/RedCrystal/red.bam'),
+                                   name='red_crystal')
             self.crystals.append(object)
 
             object = CrystalObject(self, self.world, self.worldNP,
-                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                             random.uniform(1, 10)),
-                                        'Assets/assets/GreenCrystal/green.bam',
-                                        name='green_crystal')
+                                   Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+                                        random.uniform(1, 10)),
+                                   resource_path('Assets/assets/GreenCrystal/green.bam'),
+                                   name='green_crystal')
             self.crystals.append(object)
 
         # Add Billboard Enemy
@@ -172,7 +191,7 @@ class MyApp(ShowBase):
         self.render.setLight(self.alight)
 
         # Important! Enable the shader generator.
-        #filters.setCartoonInk(1)
+        # filters.setCartoonInk(1)
         filters.setSrgbEncode()
         filters.setHighDynamicRange()
         filters.setGammaAdjust(1.4)
@@ -180,7 +199,7 @@ class MyApp(ShowBase):
         filters.setBloom((0.4, 0.4, 0.8, 0.2), desat=0.1, mintrigger=0.01, intensity=0.5, size='medium')
 
         # loading and playing music
-        mysteryMusic = base.loader.loadSfx("Assets/assets/Sound/Music/mystery.mp3")
+        mysteryMusic = base.loader.loadSfx(resource_path("Assets/assets/Sound/Music/mystery.mp3"))
         mysteryMusic.setLoop(True)
         mysteryMusic.setVolume(0.1)
         mysteryMusic.play()
@@ -200,7 +219,7 @@ class MyApp(ShowBase):
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
 
-        #self.updateColors(self.colorPlane, [-3, -5, -1.5], [1, 1, 1])  # use with directional
+        # self.updateColors(self.colorPlane, [-3, -5, -1.5], [1, 1, 1])  # use with directional
         self.updateColors(self.colorPlane, [0, 0, 0], [1, 1, 1])  # use with spotlight
         self.updateColors(self.walls, [-140, -110, -90], [1, 1, 1])
         self.updateColors(self.pillar, [-6, -6, -6], [1, 1, 1])
