@@ -4,7 +4,7 @@ from direct.interval.MetaInterval import Sequence, Parallel
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
-from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, Spotlight, AmbientLight, LVector4, LPoint3
+from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, AmbientLight, LVector4, LPoint3, DirectionalLight
 from direct.gui.DirectGui import *
 from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, BulletTriangleMesh, BulletTriangleMeshShape, BulletPlaneShape
 
@@ -21,7 +21,7 @@ class MyApp(ShowBase):
         ShowBase.__init__(self)
 
         filters = CommonFilters(self.win, self.cam)
-        base.setBackgroundColor(0, 0, 0)
+        base.setBackgroundColor(0.03, 0.03, 0.03)
 
         self.pipeline = CustomPipeline(manager=filters.manager)
         self.pipeline.enable_shadows = True
@@ -61,15 +61,7 @@ class MyApp(ShowBase):
         self.floor.setScale(mScale, mScale, mScale)
         self.floor.clear_model_nodes()
         self.floor.flatten_strong()
-        geom = self.floor.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
-        mesh = BulletTriangleMesh()
-        mesh.addGeom(geom)
-        shape = BulletTriangleMeshShape(mesh, dynamic=False)
-        node = BulletRigidBodyNode('Ground')
-        node.addShape(shape)
-        self.np = self.render.attachNewNode(node)
-        self.world.attachRigidBody(node)
-        self.floor.reparentTo(self.np)
+        self.floor.reparentTo(self.render)
 
         self.colorPlane = self.loader.loadModel("Assets/assets/Mapv2/ColorPlane/colorplane.bam")
         self.colorPlane.setTwoSided(False, 1)
@@ -85,15 +77,7 @@ class MyApp(ShowBase):
         colorMovement = Sequence(colorMove1, colorMove2, colorMove3, colorMove4, colorMove5)
         self.colorAnimation = Parallel(colorMovement, colorRotate)
         self.colorAnimation.loop()
-        geom = self.colorPlane.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
-        mesh = BulletTriangleMesh()
-        mesh.addGeom(geom)
-        shape = BulletTriangleMeshShape(mesh, dynamic=False)
-        node = BulletRigidBodyNode('Ground')
-        node.addShape(shape)
-        self.np = self.render.attachNewNode(node)
-        self.world.attachRigidBody(node)
-        self.colorPlane.reparentTo(self.np)
+        self.colorPlane.reparentTo(self.render)
 
         self.scene = self.loader.loadModel("Assets/assets/Mapv2/Walls/wall.bam")
         self.scene.setTwoSided(False, 1)
@@ -104,7 +88,7 @@ class MyApp(ShowBase):
         mesh = BulletTriangleMesh()
         mesh.addGeom(geom)
         shape = BulletTriangleMeshShape(mesh, dynamic=False)
-        node = BulletRigidBodyNode('Ground')
+        node = BulletRigidBodyNode('Walls')
         node.addShape(shape)
         self.np = self.render.attachNewNode(node)
         self.world.attachRigidBody(node)
@@ -119,7 +103,7 @@ class MyApp(ShowBase):
         mesh = BulletTriangleMesh()
         mesh.addGeom(geom)
         shape = BulletTriangleMeshShape(mesh, dynamic=False)
-        node = BulletRigidBodyNode('Ground')
+        node = BulletRigidBodyNode('Pillar')
         node.addShape(shape)
         self.np = self.render.attachNewNode(node)
         self.world.attachRigidBody(node)
@@ -130,7 +114,7 @@ class MyApp(ShowBase):
         node = BulletRigidBodyNode('Ground')
         node.addShape(shape)
         np = self.render.attachNewNode(node)
-        np.setPos(0, 0, -1.1)
+        np.setPos(0, 0, -0.55)
         self.world.attachRigidBody(node)
 
         self.objects = []
@@ -171,14 +155,14 @@ class MyApp(ShowBase):
         #self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=3)
         #self.billboard_enemy = BillBoardObject("sprite.png", Vec3(2, 0, 10), scale=5)
 
-        self.light = self.render.attachNewNode(Spotlight("Spot"))
+        self.light = self.render.attachNewNode(DirectionalLight("Sun"))
         self.light.node().setScene(self.render)
         self.light.node().setShadowCaster(True, 4096, 4096)
-        self.light.node().setColor((1.5, 1.5, 1.5, 1))
+        self.light.node().setColor((2, 2, 2, 1))
         #self.light.node().showFrustum()
         self.light.node().getLens().setFov(90)
         self.light.node().getLens().setNearFar(1, 10000)
-        self.light.setPos(0, 50, 100)
+        self.light.setPos(-15, -15, 100)
         self.light.lookAt(0, 15, 0)
         self.render.setLight(self.light)
 
