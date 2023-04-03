@@ -1,6 +1,4 @@
-import os
 import random
-import sys
 
 from direct.interval.MetaInterval import Sequence, Parallel
 from direct.showbase.ShowBase import ShowBase
@@ -18,18 +16,8 @@ from pipeline import CustomPipeline
 from playercontroller import PlayerController
 from billboardobject import BillBoardObject
 from pausemenu import PauseMenu
-
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    path = '/' + os.path.join(base_path, relative_path).replace('\\', '/').replace('C:', 'c')
-    return path
+from enemyspawner import EnemySpawner
+from resourcepath import resource_path
 
 
 loadPrcFile(resource_path('Config.prc'))
@@ -172,9 +160,11 @@ class MyApp(ShowBase):
 
         # Add Billboard Enemy
         self.enemies = []
-        self.enemies.append(BillBoardObject(resource_path('Assets/assets/GreenEnemy/base.png'), Vec3(0, 5, 8), scale=1.5))
-        self.enemies.append(BillBoardObject(resource_path('Assets/assets/RedEnemy/base.png'), Vec3(2, -5, 8), scale=1.5))
-        self.enemies.append(BillBoardObject(resource_path('Assets/assets/BlueEnemy/base.png'), Vec3(2, 0, 8), scale=1.5))
+        redEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/RedEnemy/base.png'))
+        greenEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/GreenEnemy/base.png'))
+        self.blueEnemySpawner = EnemySpawner(self.enemies, Vec3(2, 0, 8), "blue", 2, 4)
+        self.enemies.append(BillBoardObject(greenEnemyTex, Vec3(0, 5, 8), scale=1.5))
+        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
@@ -244,6 +234,7 @@ class MyApp(ShowBase):
             object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         
         self.updateEnemies()
+        self.blueEnemySpawner.update(dt)
         
         return task.cont
     

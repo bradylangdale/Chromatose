@@ -5,12 +5,12 @@ from panda3d.bullet import BulletRigidBodyNode, BulletCapsuleShape
 
 class BillBoardObject(DirectObject):
 
-    def __init__(self, texture_path="sprite.png", position=Vec3(0, 0, 1), scale=1):
+    def __init__(self, texture, position=Vec3(0, 0, 1), scale=1):
         DirectObject.__init__(self)
         self.position = position
         self.scale = scale
         # Load Texture
-        self.texture = base.loader.loadTexture(texture_path)
+        self.texture = texture
         self.tex_width = self.texture.getXSize()
         self.tex_height = self.texture.getYSize()
         self.aspect_ratio = self.tex_width / self.tex_height
