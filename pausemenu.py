@@ -11,7 +11,7 @@ class PauseMenu:
     def show_pause_menu(self):
         self.pause_menu_frame = DirectFrame(frameSize=(-0.5, 0.5, -0.5, 0.5), frameColor=(0.5, 0.5, 0.5, 0.8))
         
-        self.image = OnscreenImage(image='Assets/assets/Text/Chromatose.png', scale=0.1, pos=(0, 0, 1))
+        self.image = OnscreenImage(image='Assets/assets/Text/Chromatose.png', scale=(0.480, 1, 0.180/2), pos=(0, 0, 0.4))
         self.image.setTransparency(TransparencyAttrib.MAlpha)
         
         resume_button = DirectButton(text="Resume", scale=0.1, pos=(0, 0, 0.2), command=self.toggle_pause)

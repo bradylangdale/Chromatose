@@ -274,6 +274,7 @@ class MyApp(ShowBase):
         self.player.set_player_view()
         self.game_started = True
         self.start_screen.hide()
+        self.start_screen.__KillImage__()
         self.pauseMenu.release_keys_mouse()
 
         self.player.redMeter.show()
