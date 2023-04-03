@@ -1,5 +1,5 @@
-from direct.gui.DirectGui import DirectButton, DirectFrame
-from panda3d.core import WindowProperties
+from direct.gui.DirectGui import DirectButton, DirectFrame, OnscreenImage
+from panda3d.core import WindowProperties, TransparencyAttrib
 
 class PauseMenu:
     def __init__(self, game):
@@ -10,7 +10,10 @@ class PauseMenu:
 
     def show_pause_menu(self):
         self.pause_menu_frame = DirectFrame(frameSize=(-0.5, 0.5, -0.5, 0.5), frameColor=(0.5, 0.5, 0.5, 0.8))
-
+        
+        self.image = OnscreenImage(image='Assets/assets/Text/Chromatose.png', scale=(0.480, 1, 0.180/2), pos=(0, 0, 0.4))
+        self.image.setTransparency(TransparencyAttrib.MAlpha)
+        
         resume_button = DirectButton(text="Resume", scale=0.1, pos=(0, 0, 0.2), command=self.toggle_pause)
         options_button = DirectButton(text="Options", scale=0.1, pos=(0, 0, 0), command=self.show_options)
         exit_button = DirectButton(text="Exit", scale=0.1, pos=(0, 0, -0.2), command=self.game.userExit)
@@ -21,7 +24,8 @@ class PauseMenu:
 
     def hide_pause_menu(self):
         self.pause_menu_frame.destroy()
-
+        self.image.destroy()
+        
     def lock_keys_mouse(self):
         props = WindowProperties()
         props.setCursorHidden(False)
