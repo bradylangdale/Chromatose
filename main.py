@@ -171,9 +171,10 @@ class MyApp(ShowBase):
             self.crystals.append(object)
 
         # Add Billboard Enemy
-        self.billboard_enemy = BillBoardObject(resource_path('Assets/assets/GreenEnemy/base.png'), Vec3(0, 5, 8), scale=1.5)
-        self.billboard_enemy = BillBoardObject(resource_path('Assets/assets/RedEnemy/base.png'), Vec3(2, -5, 8), scale=1.5)
-        self.billboard_enemy = BillBoardObject(resource_path('Assets/assets/BlueEnemy/base.png'), Vec3(2, 0, 8), scale=1.5)
+        self.enemies = []
+        self.enemies.append(BillBoardObject(resource_path('Assets/assets/GreenEnemy/base.png'), Vec3(0, 5, 8), scale=1.5))
+        self.enemies.append(BillBoardObject(resource_path('Assets/assets/RedEnemy/base.png'), Vec3(2, -5, 8), scale=1.5))
+        self.enemies.append(BillBoardObject(resource_path('Assets/assets/BlueEnemy/base.png'), Vec3(2, 0, 8), scale=1.5))
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
@@ -227,7 +228,21 @@ class MyApp(ShowBase):
         self.player.gun.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         for object in self.objects:
             object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
+        
+        self.updateEnemies()
+        
         return task.cont
+    
+    def updateEnemies(self):
+        # Making enemies go to player
+        for enemy in self.enemies:
+            vel = enemy.card_physics_node.linear_velocity
+            cardPos = enemy.card_physics_np.getPos()
+            playerPos = self.player.playerRBNode.getPos()
+            direction = playerPos - cardPos
+            direction.z = 0
+            direction = direction.normalized() * 11
+            enemy.card_physics_node.linear_velocity = Vec3(direction.x, direction.y, vel.z)
 
     def updateColors(self, model, start, end):
         model.setColorScale(self.interpolate(start[0], end[0], self.player.r),
