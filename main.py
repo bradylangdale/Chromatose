@@ -65,15 +65,6 @@ class MyApp(ShowBase):
         self.player = PlayerController(self.camera, self.win)
 
         self.player.setPos(self.camera.getPos() - Vec3(0, 20, 0))
-
-        # Load Sky Box (sphere in our case)
-        sScale = 10
-        self.sky =  self.loader.loadModel(resource_path("Assets/assets/SkySphere/Skysphere.bam"))
-        self.sky.setScale(sScale, sScale, sScale)
-        self.sky.reparentTo(self.render)
-        self.sky.setBin('background', 1)  
-        self.sky.setDepthWrite(False) 
-        #self.sky.setShaderOff()
         
         # Load Map Mesh
         mScale = 4
@@ -116,19 +107,47 @@ class MyApp(ShowBase):
         self.world.attachRigidBody(node)
         self.walls.reparentTo(self.np)
 
-        self.pillar = self.loader.loadModel(resource_path("Assets/assets/Mapv2/Pillar/pillar.bam"))
-        self.pillar.setTwoSided(False, 1)
-        self.pillar.setScale(mScale, mScale, mScale)
-        self.pillar.clear_model_nodes()
-        self.pillar.flatten_strong()
-        geom = self.pillar.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
+        self.pillar_model = self.loader.loadModel(resource_path("Assets/assets/Mapv2/Pillar/pillar.bam"))
+        self.pillar_model.setTwoSided(False, 1)
+        self.pillar_model.setScale(mScale, mScale, mScale)
+        self.pillar_model.clear_model_nodes()
+        self.pillar_model.flatten_strong()
+        geom = self.pillar_model.findAllMatches('**/+GeomNode')[0].node().getGeom(0)
         shape = BulletConvexHullShape()
         shape.addGeom(geom)
         node = BulletRigidBodyNode('Pillar')
         node.addShape(shape)
-        self.np = self.render.attachNewNode(node)
-        self.world.attachRigidBody(node)
-        self.pillar.reparentTo(self.np)
+
+        self.pillars = []
+        pillar_offset = Vec3(-26, 28.33, 2.1)
+
+        # pillar 1
+        rb = node.make_copy()
+        self.pillars.append(self.render.attachNewNode(rb))
+        self.pillars[-1].setPos(0, 0, 0)
+        self.world.attachRigidBody(rb)
+        self.pillar_model.copyTo(self.pillars[-1])
+
+        # pillar 2
+        rb = node.make_copy()
+        self.pillars.append(self.render.attachNewNode(rb))
+        self.pillars[-1].setPos(Vec3(26, 28.33, 2.1) - pillar_offset)
+        self.world.attachRigidBody(rb)
+        self.pillar_model.copyTo(self.pillars[-1])
+
+        # pillar 3
+        rb = node.make_copy()
+        self.pillars.append(self.render.attachNewNode(rb))
+        self.pillars[-1].setPos(Vec3(26, -28.33, 2.1) - pillar_offset)
+        self.world.attachRigidBody(rb)
+        self.pillar_model.copyTo(self.pillars[-1])
+
+        # pillar 4
+        rb = node.make_copy()
+        self.pillars.append(self.render.attachNewNode(rb))
+        self.pillars[-1].setPos(Vec3(-26, -28.33, 2.1) - pillar_offset)
+        self.world.attachRigidBody(rb)
+        self.pillar_model.copyTo(self.pillars[-1])
 
         # Plane (should keep things from falling through)
         shape = BulletPlaneShape(Vec3(0, 0, 1), 1)
@@ -141,19 +160,19 @@ class MyApp(ShowBase):
         self.crystals = []
         for i in range(10):
             object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(2, 8)),
+                                        random.uniform(2, 5)),
                                    resource_path('Assets/assets/BlueCrystal/Blue.bam'),
                                    name='blue_crystal')
             self.crystals.append(object)
 
             object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(2, 8)),
+                                        random.uniform(2, 5)),
                                    resource_path('Assets/assets/RedCrystal/red.bam'),
                                    name='red_crystal')
             self.crystals.append(object)
 
             object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(2, 8)),
+                                        random.uniform(2, 5)),
                                    resource_path('Assets/assets/GreenCrystal/green.bam'),
                                    name='green_crystal')
             self.crystals.append(object)
@@ -169,7 +188,7 @@ class MyApp(ShowBase):
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
         self.light.node().setShadowCaster(True, 4096, 4096)
-        self.light.node().setColor((1.2, 1.2, 1.2, 1))
+        self.light.node().setColor((1, 1, 1, 1))
         # self.light.node().showFrustum()
         self.light.node().getLens().setFov(90)
         self.light.node().getLens().setNearFar(1, 10000)
@@ -194,11 +213,7 @@ class MyApp(ShowBase):
         mysteryMusic.setVolume(0.1)
         mysteryMusic.play()
 
-
         self.add_task(self.update, 'update')
-        print(self.colorPlane.getColorScale())
-        print(self.walls.getColorScale())
-        print(self.pillar.getColorScale())
 
         # Start Screen
         self.pauseMenu = PauseMenu(self)
@@ -239,8 +254,10 @@ class MyApp(ShowBase):
         # self.updateColors(self.colorPlane, [-3, -5, -1.5], [1, 1, 1])  # use with directional
         self.updateColors(self.colorPlane, [0, 0, 0], [1, 1, 1])  # use with spotlight
         self.updateColors(self.walls, [-140, -110, -90], [1, 1, 1])
-        self.updateColors(self.pillar, [-6, -6, -6], [1, 1, 1])
         self.updateColors(self.player.gun, [-6, -6, -6], [256, 256, 256])
+
+        for pillar in self.pillars:
+            self.updateColors(pillar, [-6, -6, -6], [1, 1, 1])
 
         self.player.shield.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
 

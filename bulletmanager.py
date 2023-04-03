@@ -76,7 +76,6 @@ class BulletManager(DirectObject):
         self.add_task(self.track_lifetime, 'track_bullets')
 
     def spawn(self, position, impulse):
-
         typeOfBullet = randint(0, len(self.bulletModels) - 1)
         rb = self.bulletNodes[typeOfBullet].make_copy()
 
