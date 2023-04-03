@@ -73,7 +73,7 @@ class MyApp(ShowBase):
         self.sky.reparentTo(self.render)
         self.sky.setBin('background', 1)  
         self.sky.setDepthWrite(False) 
-        self.sky.setShaderOff()
+        #self.sky.setShaderOff()
         
         # Load Map Mesh
         mScale = 4
@@ -169,7 +169,7 @@ class MyApp(ShowBase):
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
         self.light.node().setShadowCaster(True, 4096, 4096)
-        self.light.node().setColor((2, 2, 2, 1))
+        self.light.node().setColor((1.2, 1.2, 1.2, 1))
         # self.light.node().showFrustum()
         self.light.node().getLens().setFov(90)
         self.light.node().getLens().setNearFar(1, 10000)
