@@ -34,7 +34,7 @@ class MyApp(ShowBase):
         ShowBase.__init__(self)
 
         self.filters = CommonFilters(self.win, self.cam)
-        base.setBackgroundColor(0.03, 0.03, 0.03)
+        base.setBackgroundColor(0.04, 0.04, 0.04)
 
         self.pipeline = CustomPipeline(manager=self.filters.manager)
         self.pipeline.enable_shadows = True
