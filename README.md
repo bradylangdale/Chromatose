@@ -14,4 +14,4 @@ You start with half of each color, shown by the bars in the bottom left corner. 
 
 Your job is to kill as many enemies as possible, every time you kill one, it will drop a crystal that you can use to replenish that color. 
 
-The game's enemy count scales as your score increases, How long can you survive?
+The game's enemy count and damage scales as your score increases, How long can you survive?
