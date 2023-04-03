@@ -66,6 +66,15 @@ class MyApp(ShowBase):
 
         self.player.setPos(self.camera.getPos() - Vec3(0, 20, 0))
 
+        # Load Sky Box (sphere in our case)
+        sScale = 10
+        self.sky =  self.loader.loadModel(resource_path("Assets/assets/SkySphere/Skysphere.bam"))
+        self.sky.setScale(sScale, sScale, sScale)
+        self.sky.reparentTo(self.render)
+        self.sky.setBin('background', 1)  
+        self.sky.setDepthWrite(False) 
+        self.sky.setShaderOff()
+        
         # Load Map Mesh
         mScale = 4
         self.floor = self.loader.loadModel(resource_path("Assets/assets/Mapv2/Floor/floor.bam"))
