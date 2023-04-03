@@ -51,5 +51,6 @@ class BillBoardObject(DirectObject):
         if self.health < 0:
             self.card_physics_node.removeAllChildren()
             base.world.remove(self.card_physics_node)
+            return task.done
 
-        return Task.cont
+        return task.cont
