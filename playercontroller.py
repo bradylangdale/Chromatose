@@ -183,12 +183,13 @@ class PlayerController(DirectObject):
             shrink = self.shield.scaleInterval(0.2, Vec3(0.001, 0.001, 0.001))
             shrink.start()
             self.shieldDeployed = False
+            print(self.playerRBNode.getPos())
 
         if self.shootCD >= 0:
             self.shootCD -= 0.05
 
         if self.shieldDeployed and self.b > 0:
-            self.b -= 0.001
+            #self.b -= 0.001
             self.doShield()
 
         return task.cont
@@ -345,7 +346,7 @@ class PlayerController(DirectObject):
                 base.world.remove(contact.getNode1())
 
             elif 'Billboard' in contact.getNode1().getName():
-                self.r -= 0.01
+                self.r -= 0.001
 
         return task.cont
 
