@@ -1,5 +1,5 @@
 
-![Logo][https://github.com/bradylangdale/Chromatose/blob/master/Assets/assets/Text/ChromatoseLight.png]
+![Logo][/Assets/assets/Text/ChromatoseLight.png]
 
 # Chromatose
 Capsher 2023 Python Game Competition
