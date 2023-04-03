@@ -1,12 +1,16 @@
+from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
 from panda3d.core import TextureStage, CardMaker, Vec3, TransparencyAttrib, Texture, NodePath, PNMImage
 from direct.showbase.DirectObject import DirectObject
 from panda3d.bullet import BulletRigidBodyNode, BulletCapsuleShape
 
+from crystalobject import CrystalObject
+from resourcepath import resource_path
+
 
 class BillBoardObject(DirectObject):
 
-    def __init__(self, texture, position=Vec3(0, 0, 1), scale=1):
+    def __init__(self, texture, position=Vec3(0, 0, 1), scale=1, drop=None):
         DirectObject.__init__(self)
         self.position = position
         self.scale = scale
@@ -28,7 +32,7 @@ class BillBoardObject(DirectObject):
         # Add Physics
         self.card_physics_node = BulletRigidBodyNode('Billboard')
         self.card_physics_node.setMass(0.01)
-        shape = BulletCapsuleShape(self.aspect_ratio * self.scale, self.scale * 1.5, 2)
+        shape = BulletCapsuleShape(self.scale / 2, self.scale * self.aspect_ratio, 2)
         self.card_physics_node.addShape(shape)
         base.world.attachRigidBody(self.card_physics_node)
         self.card_physics_np = base.render.attachNewNode(self.card_physics_node)
@@ -37,8 +41,22 @@ class BillBoardObject(DirectObject):
 
         # Make item upright
         self.card_physics_node.setAngularFactor(Vec3(0, 0, 1))
+        self.card_physics_node.setLinearSleepThreshold(0)
 
         self.health = 1
+        self.maxSpeed = 15
+
+        self.dropPath = resource_path('Assets/assets/Bullet/Bullet.bam')
+        self.dropName = 'default'
+        if drop is 'red':
+            self.dropPath = resource_path('Assets/assets/RedCrystal/red.bam')
+            self.dropName = 'red_crystal'
+        elif drop is 'green':
+            self.dropPath = resource_path('Assets/assets/GreenCrystal/green.bam')
+            self.dropName = 'green_crystal'
+        elif drop is 'blue':
+            self.dropPath = resource_path('Assets/assets/BlueCrystal/Blue.bam')
+            self.dropName = 'blue_crystal'
 
         self.add_task(self.collision_check, "collision_check")
 
@@ -51,6 +69,18 @@ class BillBoardObject(DirectObject):
         if self.health < 0:
             self.card_physics_node.removeAllChildren()
             base.world.remove(self.card_physics_node)
+
+            pos = self.card_physics_np.getPos()
+            CrystalObject(pos, self.dropPath, name=self.dropName)
             return task.done
 
         return task.cont
+
+    def move_toward(self, pos):
+        direction = pos - self.card_physics_np.getPos()
+        direction.z = 0
+        idealVelocity = direction.normalized() * self.maxSpeed
+        accel = idealVelocity - self.card_physics_node.getLinearVelocity()
+        accel.z = 0
+
+        self.card_physics_node.applyCentralForce(accel * 0.05)

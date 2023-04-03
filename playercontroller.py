@@ -3,12 +3,13 @@ import sys
 from math import sin, pi, cos, copysign
 from random import randint
 
+from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
 from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode, BulletConvexHullShape, BulletSphereShape, \
     BulletGhostNode
-from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound, TransformState
+from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound, TransformState, TextNode
 from direct.gui.DirectGui import DGG
 
 from resourcepath import resource_path
@@ -71,7 +72,7 @@ class PlayerController(DirectObject):
         self.gun.clear_model_nodes()
 
         self.shield = base.loader.loadModel('Assets/assets/Shield/Shield.bam')
-        #self.shield.setTwoSided(False, 1)
+        # self.shield.setTwoSided(False, 1)
         self.shield.flattenLight()
         self.shield.clear_model_nodes()
         self.shield.reparentTo(self.playerRBNode)
@@ -79,11 +80,7 @@ class PlayerController(DirectObject):
         self.shield.setPos(0, 0, 0)
         self.shieldRotate = self.shield.hprInterval(10, Vec3(-360, 0, 0))
         self.shieldRotate.loop()
-        self.shield.setScale(0.001, 0.001, 0.001)
-
-        self.r = 1.0
-        self.g = 1.0
-        self.b = 1.0
+        self.shield.setScale(0.001, 0.001, 3)
 
         self.canJump = True
         self.fullscreen = False
@@ -122,18 +119,26 @@ class PlayerController(DirectObject):
 
         # Pause
         self.paused = True
-                
+
         # cooldowns & states
         self.jumping = False
         self.jumpCD = 0
         self.shootCD = 0
         self.shieldDeployed = False
+        self.score = 0
+
+        # display score
+        self.font = base.loader.loadFont(resource_path('Assets/assets/font/bedstead.otf'))
+        self.scoreLabel = OnscreenText(text='', pos=(-1.32, 0.95), scale=0.07, fg=(1, 1, 1, 1))
+        self.scoreLabel.setFont(self.font)
+        self.scoreLabel.setAlign(TextNode.ABoxedLeft)
 
         # Color meters
         scale_factor = min(base.win.getXSize(), base.win.getYSize()) / 1000
         self.blueMeter = self.create_meter((0, 0, 1, 0.8), (-1.2, 0, -0.55), scale_factor)
-        self.redMeter = self.create_meter((1, 0, 0, 0.8),  (-1.3, 0, -0.55), scale_factor)
+        self.redMeter = self.create_meter((1, 0, 0, 0.8), (-1.3, 0, -0.55), scale_factor)
         self.greenMeter = self.create_meter((0, 1, 0, 0.8), (-1.25, 0, -0.55), scale_factor)
+
         self.r = 0
         self.b = 0
         self.g = 0
@@ -173,14 +178,14 @@ class PlayerController(DirectObject):
 
             self.bullets.spawn(position, impulse * 0.5)
             self.shootCD = 1
-            self.g -= 0.01
+            self.g -= 0.005
 
         if self.currentState['m-right'] and not self.shieldDeployed and self.b > 0:
-            expand = self.shield.scaleInterval(0.2, Vec3(2, 2, 2))
+            expand = self.shield.scaleInterval(0.2, Vec3(3, 3, 1))
             expand.start()
             self.shieldDeployed = True
         elif self.shieldDeployed:
-            shrink = self.shield.scaleInterval(0.2, Vec3(0.001, 0.001, 0.001))
+            shrink = self.shield.scaleInterval(0.2, Vec3(0.001, 0.001, 1))
             shrink.start()
             self.shieldDeployed = False
             print(self.playerRBNode.getPos())
@@ -189,7 +194,7 @@ class PlayerController(DirectObject):
             self.shootCD -= 0.05
 
         if self.shieldDeployed and self.b > 0:
-            #self.b -= 0.001
+            self.b -= 0.01
             self.doShield()
 
         return task.cont
@@ -202,9 +207,9 @@ class PlayerController(DirectObject):
             distance = direction.length()
             direction.normalize()
 
-            direction *= 10
+            direction *= 1.5
 
-            force = direction / pow(distance, 2)
+            force = direction / distance
 
             node.applyCentralImpulse(force)
 
@@ -342,6 +347,7 @@ class PlayerController(DirectObject):
             elif 'blue_crystal' in contact.getNode1().getName() and self.b < 1:
                 self.blueChime.play()
                 self.b += 0.1
+
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
@@ -373,15 +379,17 @@ class PlayerController(DirectObject):
     def create_meter(self, fg_color, pos, scale_factor):
         multiplier = 1
         meter = UISlider(
-            allowprogressBar= True,
-            frameSize=(-0.17*scale_factor*multiplier,0.17*scale_factor*multiplier,-0.5*scale_factor*multiplier,0.5*scale_factor*multiplier),
+            allowprogressBar=True,
+            frameSize=(
+            -0.17 * scale_factor * multiplier, 0.17 * scale_factor * multiplier, -0.5 * scale_factor * multiplier,
+            0.5 * scale_factor * multiplier),
             pos=pos,
             value=0.6,
             orientation=DGG.VERTICAL,
             relief=None,
             progressBar_frameColor=fg_color,
-            thumb_frameSize=(0,0,0,0),
-            thumb_frameColor=(1,1,1, 0),
+            thumb_frameSize=(0, 0, 0, 0),
+            thumb_frameColor=(1, 1, 1, 0),
         )
 
         return meter
@@ -392,5 +400,3 @@ class PlayerController(DirectObject):
         self.gun.reparentTo(self.camera)
         self.gun.setH(90)
         self.gun.setPos(0.7, 0.5, -0.35)
-
-
