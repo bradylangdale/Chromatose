@@ -202,10 +202,24 @@ class MyApp(ShowBase):
         print(self.colorPlane.getColorScale())
         print(self.walls.getColorScale())
         print(self.pillar.getColorScale())
+        
+    def reset(self):
+        self.player.setPos((0, 0, 2))
+        self.player.r = 0
+        self.player.g = 0
+        self.player.b = 0
+        for enemy in self.enemies:
+            enemy.card_physics_node.removeAllChildren()
+            self.world.remove(enemy.card_physics_node)
+        self.enemies.clear()
 
     # Update
     def update(self, task):
         if self.pauseMenu.paused:
+            return task.cont
+        if self.player.r < 0:
+            self.reset()
+            self.pauseMenu.toggle_pause()
             return task.cont
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
