@@ -172,9 +172,12 @@ class MyApp(ShowBase):
 
         # Add Billboard Enemy
         self.enemies = []
-        self.enemies.append(BillBoardObject(resource_path('Assets/assets/GreenEnemy/base.png'), Vec3(0, 5, 8), scale=1.5))
-        self.enemies.append(BillBoardObject(resource_path('Assets/assets/RedEnemy/base.png'), Vec3(2, -5, 8), scale=1.5))
-        self.enemies.append(BillBoardObject(resource_path('Assets/assets/BlueEnemy/base.png'), Vec3(2, 0, 8), scale=1.5))
+        redEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/RedEnemy/base.png'))
+        greenEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/GreenEnemy/base.png'))
+        blueEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/BlueEnemy/base.png'))
+        self.enemies.append(BillBoardObject(greenEnemyTex, Vec3(0, 5, 8), scale=1.5))
+        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))
+        self.enemies.append(BillBoardObject(blueEnemyTex, Vec3(2, 0, 8), scale=1.5))
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
