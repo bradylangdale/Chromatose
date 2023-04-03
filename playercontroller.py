@@ -57,9 +57,7 @@ class PlayerController(DirectObject):
         self.gun.setScale(0.02, 0.02, 0.02)
         self.gun.flattenLight()
         self.gun.clear_model_nodes()
-        self.gun.reparentTo(self.camera)
-        self.gun.setH(90)
-        self.gun.setPos(0.7, 0.5, -0.35)
+
 
         self.canJump = True
         self.fullscreen = False
@@ -84,7 +82,7 @@ class PlayerController(DirectObject):
         self.bigHeartbeat.setLoop(True)
 
         # Pause
-        self.paused = False
+        self.paused = True
         self.jumping = False
         self.jumpCD = 0
 
@@ -99,6 +97,10 @@ class PlayerController(DirectObject):
         self.greenMeter['value'] = 0
         self.redMeter['value'] = 0
         self.blueMeter['value'] = 0
+
+        self.player_camera_pos = self.camera.getPos()
+        self.player_camera_hpr = self.camera.getHpr()
+
 
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
@@ -116,6 +118,9 @@ class PlayerController(DirectObject):
         if self.win.movePointer(0, self.win.getXSize() // 2, self.win.getYSize() // 2):
             self.camera.setH(self.camera.getH() - (x - self.win.getXSize() / 2) * mouse_sens)
             self.camera.setP(self.camera.getP() - (y - self.win.getYSize() / 2) * mouse_sens)
+
+        self.player_camera_pos = self.camera.getPos()
+        self.player_camera_hpr = self.camera.getHpr()
         return Task.cont
 
     def move(self, task):
@@ -212,7 +217,8 @@ class PlayerController(DirectObject):
         else:
             self.smallHeartbeat.stop()
             self.bigHeartbeat.stop()
-
+        self.player_camera_pos = self.camera.getPos()
+        self.player_camera_hpr = self.camera.getHpr()
         return Task.cont
 
     def item_pickup(self, task):
@@ -274,32 +280,18 @@ class PlayerController(DirectObject):
             value=0.6,
             orientation=DGG.VERTICAL,
             relief=DGG.RAISED,
-            #thumb_relief=DGG.FLAT,
             progressBar_frameColor=fg_color,
             thumb_frameSize=(0,0,0,0),
             thumb_frameColor=(1,1,1, 0),
-
         )
-        # meter = DirectFrame(
-        #     pos=pos,
-        #     frameSize=(-0.05 * scale_factor, 0.05 * scale_factor, -0.5 * scale_factor, 0.5 * scale_factor),
-        #     frameColor=(0.3, 0.3, 0.3, 0.5),
-        #     borderWidth=(0.01, 0.01),
-        #     relief=DGG.RAISED
-        # )
-        # meter_bar = DirectWaitBar(
-        #     parent=meter,
-        #     range=100,
-        #     value=50,
-        #     frameColor=(0, 0, 0, 0),
-        #     barColor=fg_color,
-        #     frameSize=(-0.04 * scale_factor, 0.04 * scale_factor, -0.49 * scale_factor, 0.49 * scale_factor),
-        #     #hpr=(0, 0, 90)
-        # )
-        # meter.setR(-90)
-        #
-        # meter.bar = meter_bar
+
         return meter
 
+    def set_player_view(self):
+        self.camera.setPos(self.player_camera_pos)
+        self.camera.setHpr(self.player_camera_hpr)
+        self.gun.reparentTo(self.camera)
+        self.gun.setH(90)
+        self.gun.setPos(0.7, 0.5, -0.35)
 
 
