@@ -22,20 +22,28 @@ class PauseMenu:
     def hide_pause_menu(self):
         self.pause_menu_frame.destroy()
 
+    def lock_keys_mouse(self):
+        props = WindowProperties()
+        props.setCursorHidden(False)
+        self.game.win.requestProperties(props)
+        self.game.player.paused = True
+
+    def release_keys_mouse(self):
+        props = WindowProperties()
+        props.setCursorHidden(True)
+        self.game.win.requestProperties(props)
+        self.game.player.paused = False
+
     def toggle_pause(self):
+        if not self.game.game_started:
+            return
         self.paused = not self.paused
         if self.paused:
             self.show_pause_menu()
-            props = WindowProperties()
-            props.setCursorHidden(False)
-            self.game.win.requestProperties(props)
-            self.game.player.paused = True
+            self.lock_keys_mouse()
         else:
             self.hide_pause_menu()
-            props = WindowProperties()
-            props.setCursorHidden(True)
-            self.game.win.requestProperties(props)
-            self.game.player.paused = False
+            self.release_keys_mouse()
 
     def show_options(self):
         pass

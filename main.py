@@ -1,6 +1,4 @@
-import os
 import random
-import sys
 
 from direct.interval.MetaInterval import Sequence, Parallel
 from direct.showbase.ShowBase import ShowBase
@@ -19,19 +17,10 @@ from playercontroller import PlayerController
 from billboardobject import BillBoardObject
 from pausemenu import PauseMenu
 
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    path = os.path.join(base_path, relative_path).replace('\\', '/').replace(':', '')
-    path = '/' + path[0].lower() + path[1:]
-    return path
-
+from enemyspawner import EnemySpawner
+from resourcepath import resource_path
+from startscreen import StartScreen
+from math import sin, cos, radians
 
 loadPrcFile(resource_path('Config.prc'))
 loadPrcFile(resource_path('Confauto.prc'))
@@ -169,9 +158,11 @@ class MyApp(ShowBase):
 
         # Add Billboard Enemy
         self.enemies = []
-        #self.enemies.append(BillBoardObject(resource_path('Assets/assets/GreenEnemy/base.png'), Vec3(0, 5, 8), scale=1.5))
-        #self.enemies.append(BillBoardObject(resource_path('Assets/assets/RedEnemy/base.png'), Vec3(2, -5, 8), scale=1.5))
-        #self.enemies.append(BillBoardObject(resource_path('Assets/assets/BlueEnemy/base.png'), Vec3(2, 0, 8), scale=1.5))
+        redEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/RedEnemy/base.png'))
+        greenEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/GreenEnemy/base.png'))
+        self.blueEnemySpawner = EnemySpawner(self.enemies, Vec3(2, 0, 8), "blue", 2, 4)
+        self.enemies.append(BillBoardObject(greenEnemyTex, Vec3(0, 5, 8), scale=1.5))
+        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
@@ -201,17 +192,37 @@ class MyApp(ShowBase):
         mysteryMusic.setVolume(0.1)
         mysteryMusic.play()
 
-        # Pause menu
-        self.pauseMenu = PauseMenu(self)
 
         self.add_task(self.update, 'update')
         print(self.colorPlane.getColorScale())
         print(self.walls.getColorScale())
         print(self.pillar.getColorScale())
 
+        # Start Screen
+        self.pauseMenu = PauseMenu(self)
+        self.pauseMenu.lock_keys_mouse()
+        self.game_started = False
+        self.start_screen = StartScreen(self.aspect2d, self.start_game)
+        self.taskMgr.add(self.rotate_wait_screen_camera, "rotate_wait_screen_camera")
+
+
+    def reset(self):
+        self.player.setPos((0, 0, 2))
+        self.player.r = 0
+        self.player.g = 0
+        self.player.b = 0
+        for enemy in self.enemies:
+            enemy.card_physics_node.removeAllChildren()
+            self.world.remove(enemy.card_physics_node)
+        self.enemies.clear()
+
     # Update
     def update(self, task):
-        if self.pauseMenu.paused:
+        if self.pauseMenu.paused or not self.game_started:
+            return task.cont
+        if self.player.r < 0:
+            self.reset()
+            self.pauseMenu.toggle_pause()
             return task.cont
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
@@ -238,6 +249,7 @@ class MyApp(ShowBase):
         #    crystals.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         
         self.updateEnemies()
+        self.blueEnemySpawner.update(dt)
         
         return task.cont
     
@@ -261,9 +273,38 @@ class MyApp(ShowBase):
     def interpolate(self, start, end, percent):
         return ((end - start) * percent) + start
 
+    def start_game(self):
+        self.player.set_player_view()
+        self.game_started = True
+        self.start_screen.hide()
+        self.pauseMenu.release_keys_mouse()
+
+    def rotate_wait_screen_camera(self, task):
+        if not self.game_started:
+            orbit_radius = 45
+            orbit_center = LPoint3(0, 20, 0)
+            orbit_speed = 10
+            eval_angle = 30
+
+            # Compute the new angle in degrees
+            angle_deg = (task.time * orbit_speed) % 360
+            angle_rad = radians(angle_deg)
+            eval_rad = radians(eval_angle)
+
+            # Convert polar coordinates to Cartesian coordinates
+            x = orbit_center.x + orbit_radius * cos(angle_rad) * cos(eval_rad)
+            y = orbit_center.y + orbit_radius * sin(angle_rad) * cos(eval_rad)
+            z = orbit_center.z + orbit_radius * sin(eval_rad)
+
+            # Update the wait screen camera's position and orientation
+            self.camera.setPos(x, y, z)
+            self.camera.lookAt(orbit_center)
+            return task.cont
+        else:
+            return task.done
+
 
 app = MyApp()
 props = WindowProperties()
-props.setCursorHidden(True)
 app.win.requestProperties(props)
 app.run()

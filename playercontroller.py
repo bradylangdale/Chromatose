@@ -8,6 +8,8 @@ from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
 from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode, BulletConvexHullShape
 from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound
+from direct.gui.DirectGui import DGG
+from verticalbar import UISlider
 
 from bulletmanager import BulletManager
 
@@ -76,9 +78,6 @@ class PlayerController(DirectObject):
         self.gun.setScale(0.02, 0.02, 0.02)
         self.gun.flattenLight()
         self.gun.clear_model_nodes()
-        self.gun.reparentTo(self.camera)
-        self.gun.setH(90)
-        self.gun.setPos(0.7, 0.5, -0.35)
 
         self.shield = base.loader.loadModel('Assets/assets/Shield/Shield.bam')
         #self.shield.setTwoSided(False, 1)
@@ -94,6 +93,7 @@ class PlayerController(DirectObject):
         self.r = 1.0
         self.g = 1.0
         self.b = 1.0
+
         self.canJump = True
         self.fullscreen = False
 
@@ -120,13 +120,29 @@ class PlayerController(DirectObject):
         self.bullets = BulletManager()
 
         # Pause
-        self.paused = False
-
+        self.paused = True
+                
         # cooldowns & states
         self.jumping = False
         self.jumpCD = 0
         self.shootCD = 0
         self.shieldDeployed = False
+
+        # Color meters
+        scale_factor = min(base.win.getXSize(), base.win.getYSize()) / 1000
+        self.blueMeter = self.create_meter((0, 0, 1, 0.8), (-0.95 * scale_factor - 0.55, 0, 0), scale_factor)
+        self.redMeter = self.create_meter((1, 0, 0, 0.8), (-0.85 * scale_factor - 0.55, 0, 0), scale_factor)
+        self.greenMeter = self.create_meter((0, 1, 0, 0.8), (-0.75 * scale_factor - 0.55, 0, 0), scale_factor)
+        self.r = 0
+        self.b = 0
+        self.g = 0
+        self.greenMeter['value'] = 0
+        self.redMeter['value'] = 0
+        self.blueMeter['value'] = 0
+
+        self.player_camera_pos = self.camera.getPos()
+        self.player_camera_hpr = self.camera.getHpr()
+
 
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
@@ -182,6 +198,9 @@ class PlayerController(DirectObject):
         if self.win.movePointer(0, self.win.getXSize() // 2, self.win.getYSize() // 2):
             self.camera.setH(self.camera.getH() - (x - self.win.getXSize() / 2) * mouse_sens)
             self.camera.setP(self.camera.getP() - (y - self.win.getYSize() / 2) * mouse_sens)
+
+        self.player_camera_pos = self.camera.getPos()
+        self.player_camera_hpr = self.camera.getHpr()
         return Task.cont
 
     def move(self, task):
@@ -271,7 +290,8 @@ class PlayerController(DirectObject):
         else:
             self.smallHeartbeat.stop()
             self.bigHeartbeat.stop()
-
+        self.player_camera_pos = self.camera.getPos()
+        self.player_camera_hpr = self.camera.getHpr()
         return Task.cont
 
     def item_pickup(self, task):
@@ -284,18 +304,21 @@ class PlayerController(DirectObject):
             if 'red_crystal' in contact.getNode1().getName() and self.r < 1:
                 self.redChime.play()
                 self.r += 0.1
+                self.redMeter['value'] = self.r
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'green_crystal' in contact.getNode1().getName() and self.g < 1:
                 self.greenChime.play()
                 self.g += 0.1
+                self.greenMeter['value'] = self.g
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'blue_crystal' in contact.getNode1().getName() and self.b < 1:
                 self.blueChime.play()
                 self.b += 0.1
+                self.blueMeter['value'] = self.b
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
@@ -320,3 +343,28 @@ class PlayerController(DirectObject):
             props.setSize(640, 480)
             base.win.requestProperties(props)
             self.fullscreen = False
+
+    def create_meter(self, fg_color, pos, scale_factor):
+        multiplier = 1
+        meter = UISlider(
+            allowprogressBar= True,
+            frameSize=(-0.17*scale_factor*multiplier,0.17*scale_factor*multiplier,-0.5*scale_factor*multiplier,0.5*scale_factor*multiplier),
+            pos=pos,
+            value=0.6,
+            orientation=DGG.VERTICAL,
+            relief=DGG.RAISED,
+            progressBar_frameColor=fg_color,
+            thumb_frameSize=(0,0,0,0),
+            thumb_frameColor=(1,1,1, 0),
+        )
+
+        return meter
+
+    def set_player_view(self):
+        self.camera.setPos(self.player_camera_pos)
+        self.camera.setHpr(self.player_camera_hpr)
+        self.gun.reparentTo(self.camera)
+        self.gun.setH(90)
+        self.gun.setPos(0.7, 0.5, -0.35)
+
+
