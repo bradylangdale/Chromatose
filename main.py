@@ -150,12 +150,12 @@ class MyApp(ShowBase):
             self.crystals.append(object)
 
         # Add Billboard Enemy
-        '''self.enemies = []
+        self.enemies = []
         redEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/RedEnemy/base.png'))
         greenEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/GreenEnemy/base.png'))
         self.blueEnemySpawner = EnemySpawner(self.enemies, Vec3(2, 0, 8), "blue", 2, 4)
         self.enemies.append(BillBoardObject(greenEnemyTex, Vec3(0, 5, 8), scale=1.5))
-        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))'''
+        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
@@ -236,7 +236,7 @@ class MyApp(ShowBase):
         self.updateColors(self.colorPlane, [0, 0, 0], [1, 1, 1])  # use with spotlight
         self.updateColors(self.walls, [-140, -110, -90], [1, 1, 1])
         self.updateColors(self.pillar, [-6, -6, -6], [1, 1, 1])
-        self.updateColors(self.player.gun, [-6, -6, -6], [180, 180, 180])
+        self.updateColors(self.player.gun, [-6, -6, -6], [256, 256, 256])
 
         self.player.shield.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         #for object in self.objects:
@@ -245,8 +245,8 @@ class MyApp(ShowBase):
         #for crystals in self.crystals:
         #    crystals.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         
-        #self.updateEnemies()
-        #self.blueEnemySpawner.update(dt)
+        self.updateEnemies()
+        self.blueEnemySpawner.update(dt)
         
         return task.cont
     

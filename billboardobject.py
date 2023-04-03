@@ -1,3 +1,4 @@
+from direct.task import Task
 from panda3d.core import TextureStage, CardMaker, Vec3, TransparencyAttrib, Texture, NodePath, PNMImage
 from direct.showbase.DirectObject import DirectObject
 from panda3d.bullet import BulletRigidBodyNode, BulletCapsuleShape
@@ -36,3 +37,19 @@ class BillBoardObject(DirectObject):
 
         # Make item upright
         self.card_physics_node.setAngularFactor(Vec3(0, 0, 1))
+
+        self.health = 1
+
+        self.add_task(self.collision_check, "collision_check")
+
+    def collision_check(self, task):
+        check = base.world.contactTest(self.card_physics_node)
+        for contact in check.getContacts():
+            if contact.getNode1().getName().find('Bullet') != -1:
+                self.health -= 0.05
+
+        if self.health < 0:
+            self.card_physics_node.removeAllChildren()
+            base.world.remove(self.card_physics_node)
+
+        return Task.cont
