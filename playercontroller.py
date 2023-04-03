@@ -366,7 +366,7 @@ class PlayerController(DirectObject):
                 base.world.remove(contact.getNode1())
 
             elif 'Billboard' in contact.getNode1().getName():
-                self.r -= 0.001 * ((self.score/10) + 1)
+                self.r -= 0.001 * ((self.score/12) + 1)
                 if self.oofEffect.status() != AudioSound.PLAYING:
                     self.oofEffect.play()
 
