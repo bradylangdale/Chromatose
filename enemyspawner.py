@@ -1,4 +1,3 @@
-from direct.showbase.ShowBaseGlobal import globalClock
 from panda3d.core import Vec3
 from direct.gui.DirectGui import *
 
@@ -25,5 +24,4 @@ class EnemySpawner():
         self.elapsed += delta
         if self.elapsed >= self.cooldown and len(self.enemies) < self.enemyCap:
             self.elapsed = 0
-            print("HERE")
             self.enemies.append(BillBoardObject(self.tex, self.location, scale=1.5))
