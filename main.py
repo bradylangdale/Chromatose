@@ -44,8 +44,6 @@ class MyApp(ShowBase):
         self.cam.node().getLens().setNearFar(0.1, 10000)
         self.cam.setAntialias(AntialiasAttrib.MAuto)
 
-        self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1, fg=(1, 1, 1, 1))
-
         # World
         self.world = BulletWorld()
         self.world.setGravity(Vec3(0, 0, -9.81))
@@ -282,6 +280,7 @@ class MyApp(ShowBase):
         return ((end - start) * percent) + start
 
     def start_game(self):
+        self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1, fg=(1, 1, 1, 1))
         self.player.set_player_view()
         self.game_started = True
         self.start_screen.hide()
