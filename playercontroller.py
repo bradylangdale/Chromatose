@@ -6,8 +6,9 @@ from random import randint
 from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
-from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode, BulletConvexHullShape
-from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound
+from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode, BulletConvexHullShape, BulletSphereShape, \
+    BulletGhostNode
+from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound, TransformState
 from direct.gui.DirectGui import DGG
 
 from resourcepath import resource_path
@@ -40,20 +41,20 @@ class PlayerController(DirectObject):
         self.accept('f', self.toggle_fullscreen)
         self.add_task(self.move, "move")
         self.add_task(self.rotate, "rotate")
-        self.add_task(self.item_pickup, 'item_pickup')
+        self.add_task(self.collision_check, 'collision_check')
         self.add_task(self.handle_mouse, 'mouse')
 
         # Add Physics
         height = 3
         radius = 0.4
         shape = BulletCapsuleShape(radius, height - 2 * radius, ZUp)
-        self.playerRB = BulletRigidBodyNode('Billboard')
+        self.playerRB = BulletRigidBodyNode('Player')
         self.playerRB.setMass(0.1)
         self.playerRB.addShape(shape)
         base.world.attachRigidBody(self.playerRB)
         self.playerRBNode = base.render.attachNewNode(self.playerRB)
         self.playerRBNode.setPos(position)
-        self.playerRBNode.setCollideMask(BitMask32.allOn())
+        self.playerRBNode.setCollideMask(BitMask32(0x01))
         self.camera.reparentTo(self.playerRBNode)
         self.camera.setPos(0, 0, 1)
 
@@ -109,6 +110,16 @@ class PlayerController(DirectObject):
         # bullet manager
         self.bullets = BulletManager()
 
+        # ghost for shield
+        shape = BulletSphereShape(4.5)
+        self.shieldGhost = BulletGhostNode('Ghost')
+        self.shieldGhost.addShape(shape)
+        self.shieldGhostNP = base.render.attachNewNode(self.shieldGhost)
+        self.shieldGhostNP.reparentTo(self.playerRBNode)
+        self.shieldGhostNP.setPos(0, 0, 1)
+        self.shieldGhostNP.setCollideMask(BitMask32(0x02))
+        base.world.attachGhost(self.shieldGhost)
+
         # Pause
         self.paused = True
                 
@@ -137,7 +148,6 @@ class PlayerController(DirectObject):
         self.greenMeter.hide()
         self.blueMeter.hide()
 
-
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
 
@@ -163,10 +173,10 @@ class PlayerController(DirectObject):
 
             self.bullets.spawn(position, impulse * 0.5)
             self.shootCD = 1
-            self.g -= 0.025
+            self.g -= 0.01
 
         if self.currentState['m-right'] and not self.shieldDeployed and self.b > 0:
-            expand = self.shield.scaleInterval(0.2, Vec3(1.5, 1.5, 1.5))
+            expand = self.shield.scaleInterval(0.2, Vec3(2, 2, 2))
             expand.start()
             self.shieldDeployed = True
         elif self.shieldDeployed:
@@ -178,9 +188,24 @@ class PlayerController(DirectObject):
             self.shootCD -= 0.05
 
         if self.shieldDeployed and self.b > 0:
-            self.b -= 0.005
+            self.b -= 0.001
+            self.doShield()
 
         return Task.cont
+
+    def doShield(self):
+        ghost = self.shieldGhostNP.node()
+
+        for node in ghost.getOverlappingNodes():
+            direction = TransformState.getPos(node.getTransform()) - (self.playerRBNode.getPos() + Vec3(0, 0, 1.5))
+            distance = direction.length()
+            direction.normalize()
+
+            direction *= 10
+
+            force = direction / pow(distance, 2)
+
+            node.applyCentralImpulse(force)
 
     def rotate(self, task):
         if self.paused:
@@ -212,13 +237,13 @@ class PlayerController(DirectObject):
 
         contact = False
 
-        check = base.world.contactTest(self.playerRB)
+        check = base.world.contactTest(self.playerRB, BitMask32.bit(0))
         for collider in check.getContacts():
             point = collider.getManifoldPoint()
             if point.getLocalPointA().z < -0.5:
                 contact = True
 
-                if not 'Walls' in collider.getNode1().getName() and self.jumpCD < 0:
+                if collider.getNode1().getName() != 'Walls' and self.jumpCD < 0:
                     self.canJump = True
 
         if self.currentState["forward"] and 15 > current_forward:
@@ -293,7 +318,7 @@ class PlayerController(DirectObject):
 
         return Task.cont
 
-    def item_pickup(self, task):
+    def collision_check(self, task):
         contact = False
 
         check = base.world.contactTest(self.playerRB)
@@ -318,6 +343,9 @@ class PlayerController(DirectObject):
                 self.b += 0.1
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
+
+            elif 'Billboard' in contact.getNode1().getName():
+                self.r -= 0.01
 
         return Task.cont
 

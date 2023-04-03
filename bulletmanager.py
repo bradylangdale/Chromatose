@@ -13,6 +13,7 @@ from resourcepath import resource_path
 class BulletManager(DirectObject):
 
     def __init__(self):
+        DirectObject.__init__(self)
 
         # load bullet models
         bulletScale = 0.15
@@ -30,6 +31,8 @@ class BulletManager(DirectObject):
         self.redBulletNP.setFriction(0.1)
         self.redBulletNP.setMass(0.01)
         self.redBulletNP.addShape(shape)
+        self.redBulletNP.setCcdMotionThreshold(0.5)
+        self.redBulletNP.setCcdSweptSphereRadius(1)
 
         bulletScale = 0.3
         self.greenBullet = base.loader.loadModel(resource_path('Assets/assets/GreenCrystal/green.bam'))
@@ -46,6 +49,8 @@ class BulletManager(DirectObject):
         self.greenBulletNP.setFriction(0.1)
         self.greenBulletNP.setMass(0.01)
         self.greenBulletNP.addShape(shape)
+        self.greenBulletNP.setCcdMotionThreshold(0.5)
+        self.greenBulletNP.setCcdSweptSphereRadius(1)
 
         self.blueBullet = base.loader.loadModel(resource_path('Assets/assets/BlueCrystal/Blue.bam'))
         self.blueBullet.setScale(bulletScale, bulletScale, bulletScale)
@@ -61,6 +66,8 @@ class BulletManager(DirectObject):
         self.blueBulletNP.setFriction(0.1)
         self.blueBulletNP.setMass(0.01)
         self.blueBulletNP.addShape(shape)
+        self.blueBulletNP.setCcdMotionThreshold(0.5)
+        self.blueBulletNP.setCcdSweptSphereRadius(1)
 
         self.bulletModels = [self.redBullet, self.blueBullet, self.greenBullet]
         self.bulletNodes = [self.redBulletNP, self.blueBulletNP, self.greenBulletNP]
