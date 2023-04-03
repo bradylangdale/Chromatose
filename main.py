@@ -207,7 +207,6 @@ class MyApp(ShowBase):
         self.start_screen = StartScreen(self.aspect2d, self.start_game)
         self.taskMgr.add(self.rotate_wait_screen_camera, "rotate_wait_screen_camera")
 
-
     def reset(self):
         self.player.setPos((0, 0, 2))
         self.player.r = 0
@@ -217,10 +216,6 @@ class MyApp(ShowBase):
             enemy.card_physics_node.removeAllChildren()
             self.world.remove(enemy.card_physics_node)
         self.enemies.clear()
-
-        self.player.redMeter.hide()
-        self.player.greenMeter.hide()
-        self.player.blueMeter.hide()
 
     # Update
     def update(self, task):
@@ -248,8 +243,6 @@ class MyApp(ShowBase):
         self.updateColors(self.player.gun, [-6, -6, -6], [256, 256, 256])
 
         self.player.shield.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
-        #for object in self.objects:
-        #    object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
 
         #for crystals in self.crystals:
         #    crystals.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
