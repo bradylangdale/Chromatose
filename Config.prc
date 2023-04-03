@@ -20,6 +20,7 @@ load-display pandagl
 # A value of -2 for the origin means to center it on the screen,
 # while -1 lets the window manager choose the position.
 
+window-title Chromatose
 win-origin -2 -2
 win-size 800 600
 

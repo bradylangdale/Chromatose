@@ -1,3 +1,4 @@
+import math
 import random
 
 from direct.interval.MetaInterval import Sequence, Parallel
@@ -65,7 +66,7 @@ class MyApp(ShowBase):
         self.player = PlayerController(self.camera, self.win)
 
         self.player.setPos(self.camera.getPos() - Vec3(0, 20, 0))
-        
+
         # Load Map Mesh
         mScale = 4
         self.floor = self.loader.loadModel(resource_path("Assets/assets/Mapv2/Floor/floor.bam"))
@@ -157,33 +158,14 @@ class MyApp(ShowBase):
         np.setPos(0, 0, -0.4)
         self.world.attachRigidBody(node)
 
-        self.crystals = []
-        for i in range(10):
-            object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(2, 5)),
-                                   resource_path('Assets/assets/BlueCrystal/Blue.bam'),
-                                   name='blue_crystal')
-            self.crystals.append(object)
-
-            object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(2, 5)),
-                                   resource_path('Assets/assets/RedCrystal/red.bam'),
-                                   name='red_crystal')
-            self.crystals.append(object)
-
-            object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(2, 5)),
-                                   resource_path('Assets/assets/GreenCrystal/green.bam'),
-                                   name='green_crystal')
-            self.crystals.append(object)
-
-        # Add Billboard Enemy
+        # Add Billboard Enemies
+        self.enemiesLimit = 10
         self.enemies = []
-        redEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/RedEnemy/base.png'))
-        greenEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/GreenEnemy/base.png'))
-        self.blueEnemySpawner = EnemySpawner(self.enemies, Vec3(2, 0, 8), "blue", 2, 4)
-        self.enemies.append(BillBoardObject(greenEnemyTex, Vec3(0, 5, 8), scale=1.5))
-        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))
+        self.enemySpawners = []
+        self.enemySpawners.append(EnemySpawner(Vec3(-36.5, -35.4, 2.1), "random", 2))
+        self.enemySpawners.append(EnemySpawner(Vec3(36.5, -35.4, 2.1), "random", 2))
+        self.enemySpawners.append(EnemySpawner(Vec3(-36.5, 35.4, 2.1), "random", 2))
+        self.enemySpawners.append(EnemySpawner(Vec3(36.5, 35.4, 2.1), "random", 2))
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
@@ -223,10 +205,13 @@ class MyApp(ShowBase):
         self.taskMgr.add(self.rotate_wait_screen_camera, "rotate_wait_screen_camera")
 
     def reset(self):
-        self.player.setPos((0, 0, 2))
-        self.player.r = 0
-        self.player.g = 0
-        self.player.b = 0
+        self.player.playerRBNode.setPos(random.uniform(-10, 10), random.uniform(-10, 10), 2)
+        self.player.r = 0.5
+        self.player.g = 0.5
+        self.player.b = 0.5
+        self.player.score = 0
+        self.player.scoreLabel.clearText()
+
         for enemy in self.enemies:
             enemy.card_physics_node.removeAllChildren()
             self.world.remove(enemy.card_physics_node)
@@ -237,12 +222,11 @@ class MyApp(ShowBase):
         if self.pauseMenu.paused or not self.game_started:
             return task.cont
         if self.player.r < 0:
+            self.pauseMenu.display_score(self.player.score)
             self.reset()
-            self.pauseMenu.toggle_pause()
             return task.cont
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
-
 
         ''' This a neat effect but idk if we want it
         colorMag = Vec3(self.player.r, self.player.g, self.player.b).length()
@@ -261,29 +245,37 @@ class MyApp(ShowBase):
 
         self.player.shield.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
 
-        #for crystals in self.crystals:
+        # for crystals in self.crystals:
         #    crystals.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
-        
+
         self.updateEnemies()
-        self.blueEnemySpawner.update(dt)
-        
+
+        for enemySpawner in self.enemySpawners:
+            if len(self.enemies) < int(self.enemiesLimit + math.sqrt(self.player.score)):
+                enemy = enemySpawner.update(dt)
+                if enemy is not None:
+                    self.enemies.append(enemy)
+
         return task.cont
-    
+
     def updateEnemies(self):
         # Making enemies go to player
+        new_enemies = []
+        playerPos = self.player.playerRBNode.getPos()
         for enemy in self.enemies:
-            vel = enemy.card_physics_node.linear_velocity
-            cardPos = enemy.card_physics_np.getPos()
-            playerPos = self.player.playerRBNode.getPos()
-            direction = playerPos - cardPos
-            direction.z = 0
-            direction = direction.normalized() * 11
-            enemy.card_physics_node.linear_velocity = Vec3(direction.x, direction.y, vel.z)
+            if enemy.health > 0:
+                enemy.move_toward(playerPos)
+                new_enemies.append(enemy)
+            else:
+                self.player.score += 1
+                self.player.scoreLabel.setText('Score: ' + str(self.player.score))
+
+        self.enemies = new_enemies
 
     def updateColors(self, model, start, end):
-        model.setColorScale(self.interpolate(start[0], end[0], self.player.r),
-                            self.interpolate(start[1], end[1], self.player.g),
-                            self.interpolate(start[2], end[2], self.player.b),
+        model.setColorScale(self.interpolate(start[0], end[0], min(max(0, self.player.r), 1)),
+                            self.interpolate(start[1], end[1], min(max(0, self.player.g), 1)),
+                            self.interpolate(start[2], end[2], min(max(0, self.player.b), 1)),
                             1.0)
 
     def interpolate(self, start, end, percent):
@@ -296,9 +288,14 @@ class MyApp(ShowBase):
         self.start_screen.__KillImage__()
         self.pauseMenu.release_keys_mouse()
 
+        self.player.r = 0.5
+        self.player.g = 0.5
+        self.player.b = 0.5
+
         self.player.redMeter.show()
         self.player.greenMeter.show()
         self.player.blueMeter.show()
+        self.player.scoreLabel.setText('Score: 0')
 
     def rotate_wait_screen_camera(self, task):
         if not self.game_started:
