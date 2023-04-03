@@ -148,6 +148,13 @@ class MyApp(ShowBase):
         self.world.attachRigidBody(rb)
         self.pillar_model.copyTo(self.pillars[-1])
 
+        # pillar 5
+        rb = node.make_copy()
+        self.pillars.append(self.render.attachNewNode(rb))
+        self.pillars[-1].setPos(Vec3(0, 0, 2.1) - pillar_offset)
+        self.world.attachRigidBody(rb)
+        self.pillar_model.copyTo(self.pillars[-1])
+
         # Plane (should keep things from falling through)
         shape = BulletPlaneShape(Vec3(0, 0, 1), 1)
         node = BulletRigidBodyNode('Ground')
@@ -164,6 +171,8 @@ class MyApp(ShowBase):
         self.enemySpawners.append(EnemySpawner(Vec3(36.5, -35.4, 2.1), "random", 2))
         self.enemySpawners.append(EnemySpawner(Vec3(-36.5, 35.4, 2.1), "random", 2))
         self.enemySpawners.append(EnemySpawner(Vec3(36.5, 35.4, 2.1), "random", 2))
+        self.enemySpawners.append(EnemySpawner(Vec3(43, 0, 2.1), "random", 2))
+        self.enemySpawners.append(EnemySpawner(Vec3(-43, 0, 2.1), "random", 2))
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)

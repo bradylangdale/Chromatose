@@ -196,11 +196,11 @@ class PlayerController(DirectObject):
 
         if self.currentState['m-right'] and not self.shieldDeployed and self.b > 0:
             self.shieldEffect.play()
-            expand = self.shield.scaleInterval(0.2, Vec3(3, 3, 1))
+            expand = self.shield.scaleInterval(0.1, Vec3(3, 3, 1))
             expand.start()
             self.shieldDeployed = True
         elif self.shieldDeployed:
-            shrink = self.shield.scaleInterval(0.2, Vec3(0.001, 0.001, 1))
+            shrink = self.shield.scaleInterval(0.1, Vec3(0.001, 0.001, 1))
             shrink.start()
             self.shieldDeployed = False
 
@@ -366,7 +366,7 @@ class PlayerController(DirectObject):
                 base.world.remove(contact.getNode1())
 
             elif 'Billboard' in contact.getNode1().getName():
-                self.r -= 0.001 * ((self.score/5) + 1)
+                self.r -= 0.001 * ((self.score/10) + 1)
                 if self.oofEffect.status() != AudioSound.PLAYING:
                     self.oofEffect.play()
 
