@@ -5,13 +5,10 @@ from panda3d.core import Vec3
 
 class InteractableObject(DirectObject):
 
-    def __init__(self, main, world, worldNP, position=Vec3(0, 0, 0), model='models/box.egg', scale=Vec3(1, 1, 1), name='default'):
+    def __init__(self, position=Vec3(0, 0, 0), model='models/box.egg', scale=Vec3(1, 1, 1), name='default'):
         DirectObject.__init__(self)
 
-        self.world = world
-        self.worldNP = worldNP
-
-        self.model = main.loader.loadModel(model)
+        self.model = base.loader.loadModel(model)
         self.model.setScale(scale.x, scale.y, scale.z)
         self.model.setPos(-self.model.getBounds().getCenter())
         self.model.setTwoSided(False, 1)
@@ -23,7 +20,7 @@ class InteractableObject(DirectObject):
         node = BulletRigidBodyNode(name)
         node.setMass(0.01)
         node.addShape(shape)
-        self.np = main.render.attachNewNode(node)
+        self.np = base.render.attachNewNode(node)
         self.np.setPos(position)
-        self.world.attachRigidBody(node)
+        base.world.attachRigidBody(node)
         self.model.copyTo(self.np)

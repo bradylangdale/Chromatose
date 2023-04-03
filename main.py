@@ -16,6 +16,7 @@ from pipeline import CustomPipeline
 from playercontroller import PlayerController
 from billboardobject import BillBoardObject
 from pausemenu import PauseMenu
+
 from enemyspawner import EnemySpawner
 from resourcepath import resource_path
 from startscreen import StartScreen
@@ -31,10 +32,10 @@ class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
-        filters = CommonFilters(self.win, self.cam)
+        self.filters = CommonFilters(self.win, self.cam)
         base.setBackgroundColor(0.03, 0.03, 0.03)
 
-        self.pipeline = CustomPipeline(manager=filters.manager)
+        self.pipeline = CustomPipeline(manager=self.filters.manager)
         self.pipeline.enable_shadows = True
 
         # set the camera's lens to the one we just created
@@ -130,30 +131,26 @@ class MyApp(ShowBase):
 
         self.objects = []
         for i in range(2):
-            object = InteractableObject(self, self.world, self.worldNP,
-                                        Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
+            object = InteractableObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
                                         resource_path('Assets/assets/Gun/Gun.bam'),
                                         scale=Vec3(0.02, 0.02, 0.02))
             self.objects.append(object)
 
         self.crystals = []
         for i in range(10):
-            object = CrystalObject(self, self.world, self.worldNP,
-                                   Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+            object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                         random.uniform(1, 10)),
                                    resource_path('Assets/assets/BlueCrystal/Blue.bam'),
                                    name='blue_crystal')
             self.crystals.append(object)
 
-            object = CrystalObject(self, self.world, self.worldNP,
-                                   Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+            object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                         random.uniform(1, 10)),
                                    resource_path('Assets/assets/RedCrystal/red.bam'),
                                    name='red_crystal')
             self.crystals.append(object)
 
-            object = CrystalObject(self, self.world, self.worldNP,
-                                   Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
+            object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
                                         random.uniform(1, 10)),
                                    resource_path('Assets/assets/GreenCrystal/green.bam'),
                                    name='green_crystal')
@@ -183,12 +180,11 @@ class MyApp(ShowBase):
         self.render.setLight(self.alight)
 
         # Important! Enable the shader generator.
-        # filters.setCartoonInk(1)
-        filters.setSrgbEncode()
-        filters.setHighDynamicRange()
-        filters.setGammaAdjust(1.4)
-        filters.setExposureAdjust(0.5)
-        filters.setBloom((0.4, 0.4, 0.8, 0.2), desat=0.1, mintrigger=0.01, intensity=0.5, size='medium')
+        self.filters.setSrgbEncode()
+        self.filters.setHighDynamicRange()
+        self.filters.setGammaAdjust(1.4)
+        self.filters.setExposureAdjust(0.5)
+        self.filters.setBloom((0.4, 0.4, 0.8, 0.2), desat=0.1, mintrigger=0.01, intensity=0.5, size='medium')
 
         # loading and playing music
         mysteryMusic = base.loader.loadSfx(resource_path("Assets/assets/Sound/Music/mystery.mp3"))
@@ -231,14 +227,26 @@ class MyApp(ShowBase):
         dt = globalClock.getDt()
         self.world.doPhysics(dt)
 
+
+        ''' This a neat effect but idk if we want it
+        colorMag = Vec3(self.player.r, self.player.g, self.player.b).length()
+        amount = self.interpolate(0.9, 0, colorMag/1.8)
+        amount = min(max(0, amount), 1)
+        self.filters.setCartoonInk(amount, color=[1, 1, 1, 1])
+        '''
+
         # self.updateColors(self.colorPlane, [-3, -5, -1.5], [1, 1, 1])  # use with directional
         self.updateColors(self.colorPlane, [0, 0, 0], [1, 1, 1])  # use with spotlight
         self.updateColors(self.walls, [-140, -110, -90], [1, 1, 1])
         self.updateColors(self.pillar, [-6, -6, -6], [1, 1, 1])
 
         self.player.gun.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
+        self.player.shield.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         for object in self.objects:
             object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
+
+        #for crystals in self.crystals:
+        #    crystals.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         
         self.updateEnemies()
         self.blueEnemySpawner.update(dt)
