@@ -9,5 +9,6 @@ def resource_path(relative_path):
     except Exception:
         base_path = os.path.abspath(".")
 
-    path = '/' + os.path.join(base_path, relative_path).replace('\\', '/').replace('C:', 'c')
+    path = os.path.join(base_path, relative_path).replace('\\', '/').replace(':', '')
+    path = '/' + path[0].lower() + path[1:]
     return path
