@@ -196,7 +196,6 @@ class PlayerController(DirectObject):
             shrink = self.shield.scaleInterval(0.2, Vec3(0.001, 0.001, 1))
             shrink.start()
             self.shieldDeployed = False
-            print(self.playerRBNode.getPos())
 
         if self.shootCD >= 0:
             self.shootCD -= 0.05

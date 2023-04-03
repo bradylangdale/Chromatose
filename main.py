@@ -34,7 +34,7 @@ class MyApp(ShowBase):
         ShowBase.__init__(self)
 
         self.filters = CommonFilters(self.win, self.cam)
-        base.setBackgroundColor(0.03, 0.03, 0.03)
+        base.setBackgroundColor(0.04, 0.04, 0.04)
 
         self.pipeline = CustomPipeline(manager=self.filters.manager)
         self.pipeline.enable_shadows = True
@@ -43,8 +43,6 @@ class MyApp(ShowBase):
         self.cam.node().getLens().setFov(120)
         self.cam.node().getLens().setNearFar(0.1, 10000)
         self.cam.setAntialias(AntialiasAttrib.MAuto)
-
-        self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1, fg=(1, 1, 1, 1))
 
         # World
         self.world = BulletWorld()
@@ -282,6 +280,7 @@ class MyApp(ShowBase):
         return ((end - start) * percent) + start
 
     def start_game(self):
+        self.crosshair = OnscreenText(text='+', pos=(0, 0), scale=0.1, fg=(1, 1, 1, 1))
         self.player.set_player_view()
         self.game_started = True
         self.start_screen.hide()
