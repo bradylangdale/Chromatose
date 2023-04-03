@@ -191,7 +191,7 @@ class PlayerController(DirectObject):
             self.b -= 0.001
             self.doShield()
 
-        return Task.cont
+        return task.cont
 
     def doShield(self):
         ghost = self.shieldGhostNP.node()
@@ -220,7 +220,7 @@ class PlayerController(DirectObject):
 
         self.player_camera_pos = self.camera.getPos()
         self.player_camera_hpr = self.camera.getHpr()
-        return Task.cont
+        return task.cont
 
     def move(self, task):
         if self.paused:
@@ -316,7 +316,7 @@ class PlayerController(DirectObject):
         self.greenMeter['value'] = self.g
         self.blueMeter['value'] = self.b
 
-        return Task.cont
+        return task.cont
 
     def collision_check(self, task):
         contact = False
@@ -347,7 +347,7 @@ class PlayerController(DirectObject):
             elif 'Billboard' in contact.getNode1().getName():
                 self.r -= 0.01
 
-        return Task.cont
+        return task.cont
 
     def scale(self, s, v):
         return Vec3(s * v.x, s * v.y, s * v.z)

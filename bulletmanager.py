@@ -102,4 +102,4 @@ class BulletManager(DirectObject):
 
         self.bullets = new_bullets
 
-        return Task.cont
+        return task.cont
