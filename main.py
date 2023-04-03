@@ -266,7 +266,7 @@ class MyApp(ShowBase):
         self.updateEnemies()
 
         for enemySpawner in self.enemySpawners:
-            if len(self.enemies) < int(self.enemiesLimit + math.sqrt(self.player.score)):
+            if len(self.enemies) < int(self.enemiesLimit + (self.player.score/2)):
                 enemy = enemySpawner.update(dt)
                 if enemy is not None:
                     self.enemies.append(enemy)
