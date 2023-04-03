@@ -44,7 +44,7 @@ class BillBoardObject(DirectObject):
         self.card_physics_node.setLinearSleepThreshold(0)
 
         self.health = 1
-        self.maxSpeed = 15
+        self.maxSpeed = 18
 
         self.dropPath = resource_path('Assets/assets/Bullet/Bullet.bam')
         self.dropName = 'default'

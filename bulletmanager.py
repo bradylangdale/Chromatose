@@ -93,7 +93,7 @@ class BulletManager(DirectObject):
         new_bullets = []
         for bullet in self.bullets:
             speed = bullet.node().getLinearVelocity().length()
-            if speed < 1:
+            if speed < 2:
                 bullet.node().removeAllChildren()
                 base.world.remove(bullet.node())
             else:
