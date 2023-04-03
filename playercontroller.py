@@ -103,6 +103,12 @@ class PlayerController(DirectObject):
 
         self.bigHeartbeat = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/bigHeartbeat.mp3"))
         self.bigHeartbeat.setLoop(True)
+        
+        self.shootEffect = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/pop.mp3"))
+        
+        self.oofEffect = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/bigOof.mp3"))
+        
+        self.shieldEffect = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/shield.mp3"))
 
         # bullet manager
         self.bullets = BulletManager()
@@ -176,11 +182,13 @@ class PlayerController(DirectObject):
                 impulse = result.getHitPos() - position
                 impulse.normalize()
 
+            self.shootEffect.play()
             self.bullets.spawn(position, impulse * 0.5)
             self.shootCD = 1
             self.g -= 0.005
 
         if self.currentState['m-right'] and not self.shieldDeployed and self.b > 0:
+            self.shieldEffect.play()
             expand = self.shield.scaleInterval(0.2, Vec3(3, 3, 1))
             expand.start()
             self.shieldDeployed = True
@@ -353,6 +361,8 @@ class PlayerController(DirectObject):
 
             elif 'Billboard' in contact.getNode1().getName():
                 self.r -= 0.001
+                if self.oofEffect.status() != AudioSound.PLAYING:
+                    self.oofEffect.play()
 
         return task.cont
 
