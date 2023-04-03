@@ -5,6 +5,8 @@ from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
 from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode
 from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound
+from direct.gui.DirectGui import DGG
+from verticalbar import UISlider
 
 
 class PlayerController(DirectObject):
@@ -59,9 +61,6 @@ class PlayerController(DirectObject):
         self.gun.setH(90)
         self.gun.setPos(0.7, 0.5, -0.35)
 
-        self.r = 0
-        self.g = 0
-        self.b = 0
         self.canJump = True
         self.fullscreen = False
 
@@ -88,6 +87,18 @@ class PlayerController(DirectObject):
         self.paused = False
         self.jumping = False
         self.jumpCD = 0
+
+        # Color meters
+        scale_factor = min(base.win.getXSize(), base.win.getYSize()) / 1000
+        self.blueMeter = self.create_meter((0, 0, 1, 0.8), (-0.95 * scale_factor - 0.55, 0, 0), scale_factor)
+        self.redMeter = self.create_meter((1, 0, 0, 0.8), (-0.85 * scale_factor - 0.55, 0, 0), scale_factor)
+        self.greenMeter = self.create_meter((0, 1, 0, 0.8), (-0.75 * scale_factor - 0.55, 0, 0), scale_factor)
+        self.r = 0
+        self.b = 0
+        self.g = 0
+        self.greenMeter['value'] = 0
+        self.redMeter['value'] = 0
+        self.blueMeter['value'] = 0
 
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
@@ -214,18 +225,21 @@ class PlayerController(DirectObject):
             if 'red_crystal' in contact.getNode1().getName():
                 self.redChime.play()
                 self.r += 0.1
+                self.redMeter['value'] = self.r
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'green_crystal' in contact.getNode1().getName():
                 self.greenChime.play()
                 self.g += 0.1
+                self.greenMeter['value'] = self.g
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'blue_crystal' in contact.getNode1().getName():
                 self.blueChime.play()
                 self.b += 0.1
+                self.blueMeter['value'] = self.b
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
@@ -250,3 +264,42 @@ class PlayerController(DirectObject):
             props.setSize(640, 480)
             base.win.requestProperties(props)
             self.fullscreen = False
+
+    def create_meter(self, fg_color, pos, scale_factor):
+        multiplier = 1
+        meter = UISlider(
+            allowprogressBar= True,
+            frameSize=(-0.17*scale_factor*multiplier,0.17*scale_factor*multiplier,-0.5*scale_factor*multiplier,0.5*scale_factor*multiplier),
+            pos=pos,
+            value=0.6,
+            orientation=DGG.VERTICAL,
+            relief=DGG.RAISED,
+            #thumb_relief=DGG.FLAT,
+            progressBar_frameColor=fg_color,
+            thumb_frameSize=(0,0,0,0),
+            thumb_frameColor=(1,1,1, 0),
+
+        )
+        # meter = DirectFrame(
+        #     pos=pos,
+        #     frameSize=(-0.05 * scale_factor, 0.05 * scale_factor, -0.5 * scale_factor, 0.5 * scale_factor),
+        #     frameColor=(0.3, 0.3, 0.3, 0.5),
+        #     borderWidth=(0.01, 0.01),
+        #     relief=DGG.RAISED
+        # )
+        # meter_bar = DirectWaitBar(
+        #     parent=meter,
+        #     range=100,
+        #     value=50,
+        #     frameColor=(0, 0, 0, 0),
+        #     barColor=fg_color,
+        #     frameSize=(-0.04 * scale_factor, 0.04 * scale_factor, -0.49 * scale_factor, 0.49 * scale_factor),
+        #     #hpr=(0, 0, 90)
+        # )
+        # meter.setR(-90)
+        #
+        # meter.bar = meter_bar
+        return meter
+
+
+
