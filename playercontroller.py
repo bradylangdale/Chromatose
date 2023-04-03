@@ -1,10 +1,27 @@
+import os
+import sys
 from math import sin, pi, cos, copysign
+from random import randint
 
 from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.task import Task
-from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode
+from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode, BulletConvexHullShape
 from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound
+
+from bulletmanager import BulletManager
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    path = '/' + os.path.join(base_path, relative_path).replace('\\', '/').replace('C:', 'c')
+    return path
 
 
 class PlayerController(DirectObject):
@@ -13,20 +30,26 @@ class PlayerController(DirectObject):
         self.camera = camera
         self.win = win
 
-        self.currentState = {"forward": False, "backward": False, "left": False, "right": False, 'jump': False}
-        self.accept("w", self.toggle_move_state, ["forward", True])
-        self.accept("w-up", self.toggle_move_state, ["forward", False])
-        self.accept("s", self.toggle_move_state, ["backward", True])
-        self.accept("s-up", self.toggle_move_state, ["backward", False])
-        self.accept("a", self.toggle_move_state, ["left", True])
-        self.accept("a-up", self.toggle_move_state, ["left", False])
-        self.accept("d", self.toggle_move_state, ["right", True])
-        self.accept("d-up", self.toggle_move_state, ["right", False])
-        self.accept('space', self.toggle_move_state, ['jump', True])
+        self.currentState = {"forward": False, "backward": False, "left": False,
+                             "right": False, 'jump': False, 'm-left': False, 'm-right': False}
+        self.accept("w", self.toggle_key_state, ["forward", True])
+        self.accept("w-up", self.toggle_key_state, ["forward", False])
+        self.accept("s", self.toggle_key_state, ["backward", True])
+        self.accept("s-up", self.toggle_key_state, ["backward", False])
+        self.accept("a", self.toggle_key_state, ["left", True])
+        self.accept("a-up", self.toggle_key_state, ["left", False])
+        self.accept("d", self.toggle_key_state, ["right", True])
+        self.accept("d-up", self.toggle_key_state, ["right", False])
+        self.accept('space', self.toggle_key_state, ['jump', True])
+        self.accept('mouse1', self.toggle_key_state, ['m-left', True])
+        self.accept('mouse1-up', self.toggle_key_state, ['m-left', False])
+        self.accept('mouse3', self.toggle_key_state, ['m-right', True])
+        self.accept('mouse3-up', self.toggle_key_state, ['m-right', False])
         self.accept('f', self.toggle_fullscreen)
         self.add_task(self.move, "move")
         self.add_task(self.rotate, "rotate")
         self.add_task(self.item_pickup, 'item_pickup')
+        self.add_task(self.handle_mouse, 'mouse')
 
         # Add Physics
         height = 3
@@ -48,8 +71,6 @@ class PlayerController(DirectObject):
         self.playerRB.setLinearSleepThreshold(0)
         self.playerRB.setLinearDamping(0.3)
 
-        self.lastPos = self.playerRBNode.getPos()
-
         self.gun = base.loader.loadModel('Assets/assets/Gun/Gun.bam')
         self.gun.setTwoSided(False, 1)
         self.gun.setScale(0.02, 0.02, 0.02)
@@ -59,41 +80,97 @@ class PlayerController(DirectObject):
         self.gun.setH(90)
         self.gun.setPos(0.7, 0.5, -0.35)
 
-        self.r = 0
-        self.g = 0
-        self.b = 0
+        self.shield = base.loader.loadModel('Assets/assets/Shield/Shield.bam')
+        #self.shield.setTwoSided(False, 1)
+        self.shield.flattenLight()
+        self.shield.clear_model_nodes()
+        self.shield.reparentTo(self.playerRBNode)
+        self.shield.setH(90)
+        self.shield.setPos(0, 0, 0)
+        self.shieldRotate = self.shield.hprInterval(10, Vec3(-360, 0, 0))
+        self.shieldRotate.loop()
+        self.shield.setScale(0.001, 0.001, 0.001)
+
+        self.r = 1.0
+        self.g = 1.0
+        self.b = 1.0
         self.canJump = True
         self.fullscreen = False
 
         # Loading sound effects
-        self.redChime = base.loader.loadSfx("Assets/assets/Sound/Effects/redChime.mp3")
-        self.greenChime = base.loader.loadSfx("Assets/assets/Sound/Effects/greenChime.mp3")
-        self.blueChime = base.loader.loadSfx("Assets/assets/Sound/Effects/blueChime.mp3")
+        self.redChime = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/redChime.mp3"))
+        self.greenChime = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/greenChime.mp3"))
+        self.blueChime = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/blueChime.mp3"))
 
-        self.footsteps = base.loader.loadSfx("Assets/assets/Sound/Effects/footsteps.mp3")
+        self.footsteps = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/footsteps.mp3"))
         self.footsteps.setLoop(True)
 
-        self.jumpEffect = base.loader.loadSfx("Assets/assets/Sound/Effects/jumpEffect.mp3")
+        self.jumpEffect = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/jumpEffect.mp3"))
 
-        self.windEffect = base.loader.loadSfx("Assets/assets/Sound/Effects/wind.mp3")
+        self.windEffect = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/wind.mp3"))
         self.windEffect.setLoop(True)
 
-        self.smallHeartbeat = base.loader.loadSfx("Assets/assets/Sound/Effects/smallHeartbeat.mp3")
+        self.smallHeartbeat = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/smallHeartbeat.mp3"))
         self.smallHeartbeat.setLoop(True)
 
-        self.bigHeartbeat = base.loader.loadSfx("Assets/assets/Sound/Effects/bigHeartbeat.mp3")
+        self.bigHeartbeat = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/bigHeartbeat.mp3"))
         self.bigHeartbeat.setLoop(True)
+
+        # bullet manager
+        self.bullets = BulletManager()
 
         # Pause
         self.paused = False
+
+        # cooldowns & states
         self.jumping = False
         self.jumpCD = 0
+        self.shootCD = 0
+        self.shieldDeployed = False
 
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
 
-    def toggle_move_state(self, key, value):
+    def toggle_key_state(self, key, value):
         self.currentState[key] = value
+
+    def handle_mouse(self, task):
+        if self.currentState['m-left'] and self.shootCD < 0 and self.g > 0:
+            # get bullet spawn position from gun position
+            position = base.render.getRelativePoint(self.camera, (0.7, 2.25, -0.35))
+
+            # cast ray forward to find target point
+            forwards = base.camera.getQuat().getForward()
+            pFrom = base.render.getRelativePoint(self.camera, self.camera.getPos())
+            pTo = pFrom + (forwards * 100)
+
+            # make sure the bullet goes toward the crosshair else default forward
+            impulse = forwards
+            result = base.world.rayTestClosest(pFrom, pTo)
+            if result.hasHit():
+                impulse = result.getHitPos() - position
+                impulse.normalize()
+
+            self.bullets.spawn(position, impulse * 0.5)
+            self.shootCD = 1
+            self.g -= 0.025
+
+        if self.currentState['m-right'] and not self.shieldDeployed and self.b > 0:
+            expand = self.shield.scaleInterval(0.2, Vec3(1.5, 1.5, 1.5))
+            expand.start()
+            self.shieldDeployed = True
+        elif self.shieldDeployed:
+            shrink = self.shield.scaleInterval(0.2, Vec3(0.001, 0.001, 0.001))
+            shrink.start()
+            self.shieldDeployed = False
+
+        if self.shootCD >= 0:
+            self.shootCD -= 0.05
+
+        if self.shieldDeployed and self.b > 0:
+            self.b -= 0.005
+
+        return Task.cont
 
     def rotate(self, task):
         if self.paused:
@@ -156,7 +233,7 @@ class PlayerController(DirectObject):
         else:
             self.jumping = False
 
-        if self.jumpCD > 0:
+        if self.jumpCD >= 0:
             self.jumpCD -= 0.05
 
         if speed.length() > 0:
@@ -169,13 +246,6 @@ class PlayerController(DirectObject):
         else:
             self.playerRB.setLinearDamping(0.3)
             self.playerRB.setFriction(0.3)
-
-        dt = globalClock.getDt()
-        self.vel = Vec3((self.playerRBNode.getX() - self.lastPos.x) / dt,
-                        (self.playerRBNode.getY() - self.lastPos.y) / dt,
-                        (self.playerRBNode.getZ() - self.lastPos.z) / dt)
-
-        self.lastPos = self.playerRBNode.getPos()
 
         # Playing movement and status sounds
         if contact and self.currentState["forward"] or self.currentState["backward"] or self.currentState["left"] or \
@@ -211,19 +281,19 @@ class PlayerController(DirectObject):
         for contact in check.getContacts():
             point = contact.getManifoldPoint()
 
-            if 'red_crystal' in contact.getNode1().getName():
+            if 'red_crystal' in contact.getNode1().getName() and self.r < 1:
                 self.redChime.play()
                 self.r += 0.1
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
-            elif 'green_crystal' in contact.getNode1().getName():
+            elif 'green_crystal' in contact.getNode1().getName() and self.g < 1:
                 self.greenChime.play()
                 self.g += 0.1
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
-            elif 'blue_crystal' in contact.getNode1().getName():
+            elif 'blue_crystal' in contact.getNode1().getName() and self.b < 1:
                 self.blueChime.play()
                 self.b += 0.1
                 contact.getNode1().removeAllChildren()
