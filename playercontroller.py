@@ -105,6 +105,7 @@ class PlayerController(DirectObject):
         self.bigHeartbeat.setLoop(True)
         
         self.shootEffect = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/pop.mp3"))
+        self.shootEffect.setVolume(0.4)
         
         self.oofEffect = base.loader.loadSfx(resource_path("Assets/assets/Sound/Effects/bigOof.mp3"))
         
@@ -159,6 +160,12 @@ class PlayerController(DirectObject):
         self.greenMeter.hide()
         self.blueMeter.hide()
 
+        props = WindowProperties()
+        props.setFullscreen(1)
+        props.setSize(1920, 1080)
+        base.win.requestProperties(props)
+        self.fullscreen = True
+
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
 
@@ -183,9 +190,9 @@ class PlayerController(DirectObject):
                 impulse.normalize()
 
             self.shootEffect.play()
-            self.bullets.spawn(position, impulse * 0.5)
+            self.bullets.spawn(position, self.playerRB.getLinearVelocity(), impulse * 0.6)
             self.shootCD = 1
-            self.g -= 0.005
+            self.g -= 0.0025
 
         if self.currentState['m-right'] and not self.shieldDeployed and self.b > 0:
             self.shieldEffect.play()
@@ -198,10 +205,10 @@ class PlayerController(DirectObject):
             self.shieldDeployed = False
 
         if self.shootCD >= 0:
-            self.shootCD -= 0.05
+            self.shootCD -= 0.1
 
         if self.shieldDeployed and self.b > 0:
-            self.b -= 0.01
+            self.b -= 0.005
             self.doShield()
 
         return task.cont
@@ -359,7 +366,7 @@ class PlayerController(DirectObject):
                 base.world.remove(contact.getNode1())
 
             elif 'Billboard' in contact.getNode1().getName():
-                self.r -= 0.001
+                self.r -= 0.001 * ((self.score/5) + 1)
                 if self.oofEffect.status() != AudioSound.PLAYING:
                     self.oofEffect.play()
 

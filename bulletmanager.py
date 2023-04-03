@@ -75,12 +75,13 @@ class BulletManager(DirectObject):
 
         self.add_task(self.track_lifetime, 'track_bullets')
 
-    def spawn(self, position, impulse):
+    def spawn(self, position, velocity, impulse):
         typeOfBullet = randint(0, len(self.bulletModels) - 1)
         rb = self.bulletNodes[typeOfBullet].make_copy()
 
         self.bullets.append(base.render.attachNewNode(rb))
         self.bullets[-1].setPos(position)
+        rb.setLinearVelocity(velocity)
 
         rb.applyCentralImpulse(impulse)
         base.world.attachRigidBody(rb)
@@ -93,7 +94,7 @@ class BulletManager(DirectObject):
         new_bullets = []
         for bullet in self.bullets:
             speed = bullet.node().getLinearVelocity().length()
-            if speed < 1:
+            if speed < 2:
                 bullet.node().removeAllChildren()
                 base.world.remove(bullet.node())
             else:

@@ -208,7 +208,15 @@ class MyApp(ShowBase):
         self.player.g = 0.5
         self.player.b = 0.5
         self.player.score = 0
-        self.player.scoreLabel.clearText()
+        self.player.scoreLabel.setText('Score: 0')
+
+        for crystal in self.render.findAllMatches("**/*crystal"):
+            crystal.node().removeAllChildren()
+            self.world.remove(crystal.node())
+
+        for bullet in self.render.findAllMatches("**/*Bullet"):
+            bullet.node().removeAllChildren()
+            self.world.remove(bullet.node())
 
         for enemy in self.enemies:
             enemy.card_physics_node.removeAllChildren()
