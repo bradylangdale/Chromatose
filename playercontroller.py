@@ -190,9 +190,9 @@ class PlayerController(DirectObject):
                 impulse.normalize()
 
             self.shootEffect.play()
-            self.bullets.spawn(position, impulse * 0.5)
+            self.bullets.spawn(position, self.playerRB.getLinearVelocity(), impulse * 0.6)
             self.shootCD = 1
-            self.g -= 0.005
+            self.g -= 0.0025
 
         if self.currentState['m-right'] and not self.shieldDeployed and self.b > 0:
             self.shieldEffect.play()
@@ -366,7 +366,7 @@ class PlayerController(DirectObject):
                 base.world.remove(contact.getNode1())
 
             elif 'Billboard' in contact.getNode1().getName():
-                self.r -= 0.001 * (self.score + 1)
+                self.r -= 0.001 * ((self.score/5) + 1)
                 if self.oofEffect.status() != AudioSound.PLAYING:
                     self.oofEffect.play()
 
