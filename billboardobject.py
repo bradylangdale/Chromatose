@@ -64,7 +64,7 @@ class BillBoardObject(DirectObject):
         check = base.world.contactTest(self.card_physics_node)
         for contact in check.getContacts():
             if contact.getNode1().getName().find('Bullet') != -1:
-                self.health -= 0.60
+                self.health -= 0.25
 
         if self.health < 0:
             self.card_physics_node.removeAllChildren()
