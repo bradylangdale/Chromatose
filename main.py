@@ -129,40 +129,33 @@ class MyApp(ShowBase):
         np.setPos(0, 0, -0.4)
         self.world.attachRigidBody(node)
 
-        self.objects = []
-        for i in range(2):
-            object = InteractableObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 20)),
-                                        resource_path('Assets/assets/Gun/Gun.bam'),
-                                        scale=Vec3(0.02, 0.02, 0.02))
-            self.objects.append(object)
-
         self.crystals = []
         for i in range(10):
             object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(1, 10)),
+                                        random.uniform(2, 8)),
                                    resource_path('Assets/assets/BlueCrystal/Blue.bam'),
                                    name='blue_crystal')
             self.crystals.append(object)
 
             object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(1, 10)),
+                                        random.uniform(2, 8)),
                                    resource_path('Assets/assets/RedCrystal/red.bam'),
                                    name='red_crystal')
             self.crystals.append(object)
 
             object = CrystalObject(Vec3(random.uniform(-10, 10), random.uniform(-10, 10),
-                                        random.uniform(1, 10)),
+                                        random.uniform(2, 8)),
                                    resource_path('Assets/assets/GreenCrystal/green.bam'),
                                    name='green_crystal')
             self.crystals.append(object)
 
         # Add Billboard Enemy
-        self.enemies = []
+        '''self.enemies = []
         redEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/RedEnemy/base.png'))
         greenEnemyTex = self.loader.loadTexture(resource_path('Assets/assets/GreenEnemy/base.png'))
         self.blueEnemySpawner = EnemySpawner(self.enemies, Vec3(2, 0, 8), "blue", 2, 4)
         self.enemies.append(BillBoardObject(greenEnemyTex, Vec3(0, 5, 8), scale=1.5))
-        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))
+        self.enemies.append(BillBoardObject(redEnemyTex, Vec3(2, -5, 8), scale=1.5))'''
 
         self.light = self.render.attachNewNode(Spotlight("Sun"))
         self.light.node().setScene(self.render)
@@ -216,6 +209,10 @@ class MyApp(ShowBase):
             self.world.remove(enemy.card_physics_node)
         self.enemies.clear()
 
+        self.player.redMeter.hide()
+        self.player.greenMeter.hide()
+        self.player.blueMeter.hide()
+
     # Update
     def update(self, task):
         if self.pauseMenu.paused or not self.game_started:
@@ -239,17 +236,17 @@ class MyApp(ShowBase):
         self.updateColors(self.colorPlane, [0, 0, 0], [1, 1, 1])  # use with spotlight
         self.updateColors(self.walls, [-140, -110, -90], [1, 1, 1])
         self.updateColors(self.pillar, [-6, -6, -6], [1, 1, 1])
+        self.updateColors(self.player.gun, [-6, -6, -6], [180, 180, 180])
 
-        self.player.gun.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         self.player.shield.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
-        for object in self.objects:
-            object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
+        #for object in self.objects:
+        #    object.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
 
         #for crystals in self.crystals:
         #    crystals.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
         
-        self.updateEnemies()
-        self.blueEnemySpawner.update(dt)
+        #self.updateEnemies()
+        #self.blueEnemySpawner.update(dt)
         
         return task.cont
     
@@ -278,6 +275,10 @@ class MyApp(ShowBase):
         self.game_started = True
         self.start_screen.hide()
         self.pauseMenu.release_keys_mouse()
+
+        self.player.redMeter.show()
+        self.player.greenMeter.show()
+        self.player.blueMeter.show()
 
     def rotate_wait_screen_camera(self, task):
         if not self.game_started:
