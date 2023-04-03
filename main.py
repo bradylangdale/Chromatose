@@ -212,6 +212,10 @@ class MyApp(ShowBase):
         self.player.score = 0
         self.player.scoreLabel.clearText()
 
+        for billboards in self.render.findAllMatches("**/=type=Billboard"):
+            billboards.removeAllChildren()
+            base.world.remove(billboards)
+
         for enemy in self.enemies:
             enemy.card_physics_node.removeAllChildren()
             self.world.remove(enemy.card_physics_node)

@@ -159,6 +159,12 @@ class PlayerController(DirectObject):
         self.greenMeter.hide()
         self.blueMeter.hide()
 
+        props = WindowProperties()
+        props.setFullscreen(1)
+        props.setSize(1920, 1080)
+        base.win.requestProperties(props)
+        self.fullscreen = True
+
     def setPos(self, vec3):
         self.playerRBNode.setPos(vec3)
 
