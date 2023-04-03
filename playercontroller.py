@@ -9,21 +9,11 @@ from direct.task import Task
 from panda3d.bullet import BulletCapsuleShape, ZUp, BulletRigidBodyNode, BulletConvexHullShape
 from panda3d.core import NodePath, BitMask32, Vec3, WindowProperties, AudioSound
 from direct.gui.DirectGui import DGG
+
+from resourcepath import resource_path
 from verticalbar import UISlider
 
 from bulletmanager import BulletManager
-
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    path = '/' + os.path.join(base_path, relative_path).replace('\\', '/').replace('C:', 'c')
-    return path
 
 
 class PlayerController(DirectObject):
@@ -130,9 +120,9 @@ class PlayerController(DirectObject):
 
         # Color meters
         scale_factor = min(base.win.getXSize(), base.win.getYSize()) / 1000
-        self.blueMeter = self.create_meter((0, 0, 1, 0.8), (-0.95 * scale_factor - 0.55, 0, 0), scale_factor)
-        self.redMeter = self.create_meter((1, 0, 0, 0.8), (-0.85 * scale_factor - 0.55, 0, 0), scale_factor)
-        self.greenMeter = self.create_meter((0, 1, 0, 0.8), (-0.75 * scale_factor - 0.55, 0, 0), scale_factor)
+        self.blueMeter = self.create_meter((0, 0, 1, 0.8), (-1.2, 0, -0.55), scale_factor)
+        self.redMeter = self.create_meter((1, 0, 0, 0.8),  (-1.3, 0, -0.55), scale_factor)
+        self.greenMeter = self.create_meter((0, 1, 0, 0.8), (-1.25, 0, -0.55), scale_factor)
         self.r = 0
         self.b = 0
         self.g = 0
@@ -142,6 +132,10 @@ class PlayerController(DirectObject):
 
         self.player_camera_pos = self.camera.getPos()
         self.player_camera_hpr = self.camera.getHpr()
+
+        self.redMeter.hide()
+        self.greenMeter.hide()
+        self.blueMeter.hide()
 
 
     def setPos(self, vec3):
@@ -292,6 +286,11 @@ class PlayerController(DirectObject):
             self.bigHeartbeat.stop()
         self.player_camera_pos = self.camera.getPos()
         self.player_camera_hpr = self.camera.getHpr()
+
+        self.redMeter['value'] = self.r
+        self.greenMeter['value'] = self.g
+        self.blueMeter['value'] = self.b
+
         return Task.cont
 
     def item_pickup(self, task):
@@ -304,21 +303,19 @@ class PlayerController(DirectObject):
             if 'red_crystal' in contact.getNode1().getName() and self.r < 1:
                 self.redChime.play()
                 self.r += 0.1
-                self.redMeter['value'] = self.r
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'green_crystal' in contact.getNode1().getName() and self.g < 1:
                 self.greenChime.play()
                 self.g += 0.1
-                self.greenMeter['value'] = self.g
+
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
             elif 'blue_crystal' in contact.getNode1().getName() and self.b < 1:
                 self.blueChime.play()
                 self.b += 0.1
-                self.blueMeter['value'] = self.b
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
@@ -352,7 +349,7 @@ class PlayerController(DirectObject):
             pos=pos,
             value=0.6,
             orientation=DGG.VERTICAL,
-            relief=DGG.RAISED,
+            relief=None,
             progressBar_frameColor=fg_color,
             thumb_frameSize=(0,0,0,0),
             thumb_frameColor=(1,1,1, 0),
