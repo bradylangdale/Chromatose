@@ -31,3 +31,17 @@ class CrystalObject(DirectObject):
         crystalRotate.loop()
         crystalMovement.loop()
         self.model.reparentTo(self.np)
+
+        self.lifetime = 500
+
+        self.add_task(self.track_lifetime, 'track_crystal')
+
+    def track_lifetime(self, task):
+        self.lifetime -= 0.25
+
+        if self.lifetime < 0:
+            self.np.node().removeAllChildren()
+            base.world.remove(self.np.node())
+            return task.done
+
+        return task.cont
