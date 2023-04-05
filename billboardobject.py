@@ -5,6 +5,7 @@ from direct.showbase.DirectObject import DirectObject
 from panda3d.bullet import BulletRigidBodyNode, BulletCapsuleShape
 
 from crystalobject import CrystalObject
+from pathfinder import Pathfinder
 from resourcepath import resource_path
 
 
@@ -59,7 +60,18 @@ class BillBoardObject(DirectObject):
             self.dropPath = resource_path('Assets/assets/BlueCrystal/Blue.bam')
             self.dropName = 'blue_crystal'
 
+        self.playerNode = base.render.findAllMatches("**/*Player")[0]
+
+        self.pathfinder = Pathfinder()
+        self.pathfinder.loadMap(resource_path('NavMeshes/defaultnavmesh.json'))
+        self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + Vec3(50, 50, 0), end=self.playerNode.getPos() + Vec3(50, 50, 0))
+        self.current_node = 0
+        self.target = self.playerNode.getPos()
+
+        self.path_lifetime = 5
+
         self.add_task(self.collision_check, "collision_check")
+        self.add_task(self.move_toward, 'pathfind')
         self.add_task(self.track_lifetime, "track_lifetime")
 
     def collision_check(self, task):
@@ -91,11 +103,33 @@ class BillBoardObject(DirectObject):
 
         return task.cont
 
-    def move_toward(self, pos):
-        direction = pos - self.card_physics_np.getPos()
+    def move_toward(self, task):
+        direction = self.target - self.card_physics_np.getPos()
         direction.z = 0
         idealVelocity = direction.normalized() * self.maxSpeed
         accel = idealVelocity - self.card_physics_node.getLinearVelocity()
         accel.z = 0
 
-        self.card_physics_node.applyCentralForce(accel * 0.05)
+        self.card_physics_node.applyCentralForce(accel * 0.2)
+
+        self.path_lifetime -= 0.02
+
+        if self.path is not None and (self.current_node + 1) < len(self.path) and direction.length() < 1.5:
+            self.current_node += 1
+            self.target = self.path[self.current_node]
+            self.target = Vec3(self.target[0], self.target[1], 2.1) - Vec3(50, 50, 2.1)
+
+        if self.path is None or self.path_lifetime < 0:
+            self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + Vec3(50, 50, 0),
+                                                end=self.playerNode.getPos() + Vec3(50, 50, 0))
+
+            if self.path is not None:
+                self.current_node = 0
+                self.target = self.path[self.current_node]
+                self.target = Vec3(self.target[0], self.target[1], 2.1) - Vec3(50, 50, 2.1)
+
+                self.path_lifetime = 5
+            else:
+                self.target = self.playerNode.getPos()
+
+        return task.cont

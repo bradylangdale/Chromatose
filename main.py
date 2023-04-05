@@ -6,11 +6,12 @@ from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, AmbientLight, LVector4, LPoint3, Spotlight, \
-    loadPrcFile
+    loadPrcFile, BitMask32
 from direct.gui.DirectGui import *
 from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, BulletTriangleMesh, \
     BulletTriangleMeshShape, BulletPlaneShape, BulletConvexHullShape
 
+from navmeshgenerator import NavMeshGenerator
 from crystalobject import CrystalObject
 from interactableobject import InteractableObject
 from pipeline import CustomPipeline
@@ -27,6 +28,7 @@ loadPrcFile(resource_path('Config.prc'))
 loadPrcFile(resource_path('Confauto.prc'))
 
 DEBUG = False
+GENERATE_NAVMESH = False
 
 
 class MyApp(ShowBase):
@@ -156,12 +158,13 @@ class MyApp(ShowBase):
         self.pillar_model.copyTo(self.pillars[-1])
 
         # Plane (should keep things from falling through)
-        shape = BulletPlaneShape(Vec3(0, 0, 1), 1)
-        node = BulletRigidBodyNode('Ground')
-        node.addShape(shape)
-        np = self.render.attachNewNode(node)
-        np.setPos(0, 0, -0.4)
-        self.world.attachRigidBody(node)
+        if not GENERATE_NAVMESH:
+            shape = BulletPlaneShape(Vec3(0, 0, 1), 1)
+            node = BulletRigidBodyNode('Ground')
+            node.addShape(shape)
+            np = self.render.attachNewNode(node)
+            np.setPos(0, 0, -0.4)
+            self.world.attachRigidBody(node)
 
         # Add Billboard Enemies
         self.enemiesLimit = 10
@@ -203,6 +206,16 @@ class MyApp(ShowBase):
         mysteryMusic.play()
 
         self.add_task(self.update, 'update')
+
+        if GENERATE_NAVMESH:
+            navMesh = NavMeshGenerator()
+            navMesh.gridSize = 100
+            navMesh.xstep = 1
+            navMesh.ystep = 1
+            navMesh.bottomLeftCorner = Vec3(-50, -50, 3)
+            navMesh.bitMask = BitMask32().allOn()
+            navMesh.scene = self.world
+            navMesh.generate()
 
         # Start Screen
         self.pauseMenu = PauseMenu(self)
@@ -279,7 +292,7 @@ class MyApp(ShowBase):
         playerPos = self.player.playerRBNode.getPos()
         for enemy in self.enemies:
             if enemy.health > 0:
-                enemy.move_toward(playerPos)
+                #enemy.move_toward(playerPos)
                 new_enemies.append(enemy)
             else:
                 self.player.score += 1
