@@ -6,7 +6,7 @@ from panda3d.core import Vec3, LPoint3
 
 class CrystalObject(DirectObject):
 
-    def __init__(self, position=Vec3(0, 0, 0), model='models/box.egg', scale=Vec3(1, 1, 1),
+    def __init__(self, position=Vec3(0, 0, 0), model='models/box.egg', scale=Vec3(0.25, 0.25, 0.25),
                  name='default'):
         DirectObject.__init__(self)
 
@@ -21,6 +21,7 @@ class CrystalObject(DirectObject):
         shape.addGeom(geom)
         node = BulletRigidBodyNode(name)
         node.addShape(shape)
+        node.setMass(0.01)
         self.np = base.render.attachNewNode(node)
         self.np.setPos(position)
         base.world.attachRigidBody(node)
@@ -32,9 +33,13 @@ class CrystalObject(DirectObject):
         crystalMovement.loop()
         self.model.reparentTo(self.np)
 
+        self.playerNode = base.render.findAllMatches("**/*Player")[0]
+        self.maxSpeed = 30
+
         self.lifetime = 500
 
         self.add_task(self.track_lifetime, 'track_crystal')
+        self.add_task(self.move_to_player, 'go_to_player')
 
     def track_lifetime(self, task):
         self.lifetime -= 0.25
@@ -42,6 +47,16 @@ class CrystalObject(DirectObject):
         if self.lifetime < 0:
             self.np.node().removeAllChildren()
             base.world.remove(self.np.node())
+            self.removeAllTasks()
             return task.done
+
+        return task.cont
+
+    def move_to_player(self, task):
+        direction = self.playerNode.getPos() - self.np.getPos()
+        idealVelocity = direction.normalized() * self.maxSpeed
+        accel = idealVelocity - self.np.node().getLinearVelocity()
+
+        self.np.node().applyCentralForce(accel)
 
         return task.cont

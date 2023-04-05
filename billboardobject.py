@@ -45,6 +45,7 @@ class BillBoardObject(DirectObject):
 
         self.health = 1
         self.maxSpeed = 18
+        self.lifetime = 1
 
         self.dropPath = resource_path('Assets/assets/Bullet/Bullet.bam')
         self.dropName = 'default'
@@ -59,6 +60,7 @@ class BillBoardObject(DirectObject):
             self.dropName = 'blue_crystal'
 
         self.add_task(self.collision_check, "collision_check")
+        self.add_task(self.track_lifetime, "track_lifetime")
 
     def collision_check(self, task):
         check = base.world.contactTest(self.card_physics_node)
@@ -69,9 +71,22 @@ class BillBoardObject(DirectObject):
         if self.health < 0:
             self.card_physics_node.removeAllChildren()
             base.world.remove(self.card_physics_node)
+            self.removeAllTasks()
 
             pos = self.card_physics_np.getPos()
-            CrystalObject(pos, self.dropPath, name=self.dropName)
+            if self.lifetime > 0:
+                CrystalObject(pos, self.dropPath, name=self.dropName)
+
+            return task.done
+
+        return task.cont
+
+    def track_lifetime(self, task):
+        if self.card_physics_node.getLinearVelocity().length () < 0.1:
+            self.lifetime -= 0.01
+
+        if self.lifetime < 0:
+            self.health = -0.1
             return task.done
 
         return task.cont
