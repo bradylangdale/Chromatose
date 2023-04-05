@@ -6,7 +6,7 @@ from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import WindowProperties, Vec3, AntialiasAttrib, AmbientLight, LVector4, LPoint3, Spotlight, \
-    loadPrcFile, BitMask32
+    loadPrcFile, BitMask32, NodePath
 from direct.gui.DirectGui import *
 from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletDebugNode, BulletTriangleMesh, \
     BulletTriangleMeshShape, BulletPlaneShape, BulletConvexHullShape
@@ -29,7 +29,6 @@ loadPrcFile(resource_path('Confauto.prc'))
 
 DEBUG = False
 GENERATE_NAVMESH = False
-
 
 class MyApp(ShowBase):
     def __init__(self):
@@ -216,6 +215,7 @@ class MyApp(ShowBase):
             navMesh.bitMask = BitMask32().allOn()
             navMesh.scene = self.world
             navMesh.generate()
+            self.userExit()
 
         # Start Screen
         self.pauseMenu = PauseMenu(self)
@@ -243,6 +243,7 @@ class MyApp(ShowBase):
         for enemy in self.enemies:
             enemy.card_physics_node.removeAllChildren()
             self.world.remove(enemy.card_physics_node)
+            enemy.removeAllTasks()
         self.enemies.clear()
 
     # Update

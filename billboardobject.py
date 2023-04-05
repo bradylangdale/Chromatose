@@ -11,7 +11,7 @@ from resourcepath import resource_path
 
 class BillBoardObject(DirectObject):
 
-    def __init__(self, texture, position=Vec3(0, 0, 1), scale=1, drop=None):
+    def __init__(self, texture, position=Vec3(0, 0, 1), scale=1, drop=None, pathfinder=None):
         DirectObject.__init__(self)
         self.position = position
         self.scale = scale
@@ -50,21 +50,26 @@ class BillBoardObject(DirectObject):
 
         self.dropPath = resource_path('Assets/assets/Bullet/Bullet.bam')
         self.dropName = 'default'
-        if drop is 'red':
+        if drop == 'red':
             self.dropPath = resource_path('Assets/assets/RedCrystal/red.bam')
             self.dropName = 'red_crystal'
-        elif drop is 'green':
+        elif drop == 'green':
             self.dropPath = resource_path('Assets/assets/GreenCrystal/green.bam')
             self.dropName = 'green_crystal'
-        elif drop is 'blue':
+        elif drop == 'blue':
             self.dropPath = resource_path('Assets/assets/BlueCrystal/Blue.bam')
             self.dropName = 'blue_crystal'
 
         self.playerNode = base.render.findAllMatches("**/*Player")[0]
 
-        self.pathfinder = Pathfinder()
-        self.pathfinder.loadMap(resource_path('NavMeshes/defaultnavmesh.json'))
-        self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + Vec3(50, 50, 0), end=self.playerNode.getPos() + Vec3(50, 50, 0))
+        if pathfinder is None:
+            self.pathfinder = Pathfinder()
+            self.pathfinder.loadMap(resource_path('NavMeshes/defaultnavmesh.json'))
+        else:
+            self.pathfinder = pathfinder
+
+        self.nav_offset = Vec3(50, 50, 3)
+        self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + self.nav_offset, end=self.playerNode.getPos() + self.nav_offset)
         self.current_node = 0
         self.target = self.playerNode.getPos()
 
@@ -75,11 +80,6 @@ class BillBoardObject(DirectObject):
         self.add_task(self.track_lifetime, "track_lifetime")
 
     def collision_check(self, task):
-        check = base.world.contactTest(self.card_physics_node)
-        for contact in check.getContacts():
-            if contact.getNode1().getName().find('Bullet') != -1:
-                self.health -= 0.25
-
         if self.health < 0:
             self.card_physics_node.removeAllChildren()
             base.world.remove(self.card_physics_node)
@@ -91,19 +91,27 @@ class BillBoardObject(DirectObject):
 
             return task.done
 
+        check = base.world.contactTest(self.card_physics_node)
+        for contact in check.getContacts():
+            if contact.getNode1().getName().find('Bullet') != -1:
+                self.health -= 0.25
+
         return task.cont
 
     def track_lifetime(self, task):
-        if self.card_physics_node.getLinearVelocity().length () < 0.1:
-            self.lifetime -= 0.01
-
         if self.lifetime < 0:
             self.health = -0.1
             return task.done
 
+        if self.card_physics_node.getLinearVelocity().length() < 0.1:
+            self.lifetime -= 0.01
+
         return task.cont
 
     def move_toward(self, task):
+        if self.health < 0:
+            return task.done
+
         direction = self.target - self.card_physics_np.getPos()
         direction.z = 0
         idealVelocity = direction.normalized() * self.maxSpeed
@@ -112,24 +120,28 @@ class BillBoardObject(DirectObject):
 
         self.card_physics_node.applyCentralForce(accel * 0.2)
 
-        self.path_lifetime -= 0.02
+        self.path_lifetime -= 0.1
 
         if self.path is not None and (self.current_node + 1) < len(self.path) and direction.length() < 1.5:
             self.current_node += 1
             self.target = self.path[self.current_node]
-            self.target = Vec3(self.target[0], self.target[1], 2.1) - Vec3(50, 50, 2.1)
+            self.target = Vec3(self.target[0], self.target[1], 3) - self.nav_offset
 
         if self.path is None or self.path_lifetime < 0:
-            self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + Vec3(50, 50, 0),
-                                                end=self.playerNode.getPos() + Vec3(50, 50, 0))
-
-            if self.path is not None:
-                self.current_node = 0
-                self.target = self.path[self.current_node]
-                self.target = Vec3(self.target[0], self.target[1], 2.1) - Vec3(50, 50, 2.1)
-
-                self.path_lifetime = 5
-            else:
+            result = base.world.rayTestClosest(self.card_physics_np.getPos(), self.playerNode.getPos())
+            if (result.hasHit() and result.getNode().getName() == 'Player') or not result.hasHit():
                 self.target = self.playerNode.getPos()
+            else:
+                self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + self.nav_offset,
+                                                    end=self.playerNode.getPos() + self.nav_offset)
+
+                if self.path is not None:
+                    self.current_node = 0
+                    self.target = self.path[self.current_node]
+                    self.target = Vec3(self.target[0], self.target[1], 3) - self.nav_offset
+
+                    self.path_lifetime = 5
+                else:
+                    self.target = self.playerNode.getPos()
 
         return task.cont

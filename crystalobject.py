@@ -53,6 +53,9 @@ class CrystalObject(DirectObject):
         return task.cont
 
     def move_to_player(self, task):
+        if self.lifetime < 0:
+            return task.done
+
         direction = self.playerNode.getPos() - self.np.getPos()
         idealVelocity = direction.normalized() * self.maxSpeed
         accel = idealVelocity - self.np.node().getLinearVelocity()
