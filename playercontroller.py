@@ -345,22 +345,26 @@ class PlayerController(DirectObject):
         for contact in check.getContacts():
             point = contact.getManifoldPoint()
 
-            if 'red_crystal' in contact.getNode1().getName() and self.r < 1:
+            if 'red_crystal' in contact.getNode1().getName():
                 self.redChime.play()
-                self.r += 0.1
+                if self.r < 1:
+                    self.r += 0.1
+
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
-            elif 'green_crystal' in contact.getNode1().getName() and self.g < 1:
+            elif 'green_crystal' in contact.getNode1().getName():
                 self.greenChime.play()
-                self.g += 0.1
+                if self.g < 1:
+                    self.g += 0.1
 
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
 
-            elif 'blue_crystal' in contact.getNode1().getName() and self.b < 1:
+            elif 'blue_crystal' in contact.getNode1().getName():
                 self.blueChime.play()
-                self.b += 0.1
+                if self.b < 1:
+                    self.b += 0.1
 
                 contact.getNode1().removeAllChildren()
                 base.world.remove(contact.getNode1())
