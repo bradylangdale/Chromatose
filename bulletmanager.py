@@ -89,7 +89,7 @@ class BulletManager(DirectObject):
 
     def track_lifetime(self, task):
         if len(self.bullets) == 0:
-            return Task.cont
+            return task.cont
 
         new_bullets = []
         for bullet in self.bullets:

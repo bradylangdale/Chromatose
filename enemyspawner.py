@@ -4,6 +4,7 @@ from panda3d.core import Vec3
 from direct.gui.DirectGui import *
 
 from billboardobject import BillBoardObject
+from pathfinder import Pathfinder
 from resourcepath import resource_path
 
 
@@ -24,6 +25,9 @@ class EnemySpawner():
             self.tex.append(base.loader.loadTexture(resource_path('Assets/assets/GreenEnemy/base.png')))
             self.tex.append(base.loader.loadTexture(resource_path('Assets/assets/BlueEnemy/base.png')))
 
+        self.pathfinder = Pathfinder()
+        self.pathfinder.loadMap(resource_path('NavMeshes/defaultnavmesh.json'))
+
         self.cooldown = cooldown
         self.elapsed = 0
 
@@ -32,7 +36,7 @@ class EnemySpawner():
         if self.elapsed >= self.cooldown:
             self.elapsed = 0
             if self.type != 'random':
-                return BillBoardObject(self.tex, self.location, scale=1.5, drop=self.type)
+                return BillBoardObject(self.tex, self.location, scale=1.5, drop=self.type, pathfinder=self.pathfinder)
             else:
                 types = ['red', 'green', 'blue']
-                return BillBoardObject(self.tex[randint(0, 2)], self.location, scale=1.5, drop=types[randint(0, 2)])
+                return BillBoardObject(self.tex[randint(0, 2)], self.location, scale=1.5, drop=types[randint(0, 2)], pathfinder=self.pathfinder)

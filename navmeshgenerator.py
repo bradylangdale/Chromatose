@@ -16,7 +16,7 @@ class NavMeshGenerator():
     @property
     def filepath(self):
         return Filename(self.dirname, self.basename)
-        
+
     def generate(self):
         def gridElement_to_x_y(gridElement):
             xy = gridElement.split('x')
@@ -25,7 +25,7 @@ class NavMeshGenerator():
             return x, y
         
         self.filepath.make_dir()
-        
+
         size = self.gridSize
         xstep = self.xstep
         ystep = self.ystep
@@ -49,10 +49,10 @@ class NavMeshGenerator():
             #repeat for all points in grid (size x size)
             directions = [[1, -1], [1, 0], [1, 1], [0, 1],
                          [-1, 1], [-1, 0], [-1, -1], [0, -1]]
-            
+
             grid = []
-            for x in range(size):
-                for y in range(size):
+            for x in range(int(size/xstep)):
+                for y in range(int(size/ystep)):
                     grid.append(str(x)+'x'+str(y))
             
             nullRow = '1,1,0,0,0,0,0,0,0,0'.split(',')      
@@ -60,7 +60,7 @@ class NavMeshGenerator():
             rowDict = {}
             for gridElement in grid:
                 x, y = gridElement_to_x_y(gridElement)
-                newRow = ['0','0', x, y, xstep, ystep, 0, x*xstep + bottomLeftCorner.x, y*ystep + bottomLeftCorner.y, 0 + bottomLeftCorner.z]
+                newRow = ['0', '0', x, y, xstep, ystep, 0, x*xstep + bottomLeftCorner.x, y*ystep + bottomLeftCorner.y, 0 + bottomLeftCorner.z]
                 rowDict[gridElement] = newRow
             
             if self.bitMask.getNumOnBits() > 0:
@@ -72,7 +72,7 @@ class NavMeshGenerator():
                     collisions = 0
                     start = Vec3(value[-3], value[-2], value[-1])
                     for dir in directions:
-                        end = Vec3(dir[0] + start.x, dir[1] + start.y, start.z)
+                        end = Vec3((xstep*dir[0]) + start.x, (ystep*dir[1]) + start.y, start.z)
 
                         result = self.scene.rayTestClosest(start, end)
 
