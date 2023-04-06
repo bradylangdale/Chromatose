@@ -81,20 +81,18 @@ class BillBoardObject(DirectObject):
 
     def collision_check(self, task):
         if self.health < 0:
-            self.card_physics_node.removeAllChildren()
-            base.world.remove(self.card_physics_node)
-            self.removeAllTasks()
-
             pos = self.card_physics_np.getPos()
-            if self.lifetime > 0:
-                CrystalObject(pos, self.dropPath, name=self.dropName)
+            CrystalObject(pos, self.dropPath, name=self.dropName)
+
+            self.removeEnemy()
 
             return task.done
 
-        check = base.world.contactTest(self.card_physics_node)
-        for contact in check.getContacts():
-            if contact.getNode1().getName().find('Bullet') != -1:
-                self.health -= 0.25
+        else:
+            check = base.world.contactTest(self.card_physics_node)
+            for contact in check.getContacts():
+                if contact.getNode1().getName().find('Bullet') != -1:
+                    self.health -= 0.25
 
         return task.cont
 
@@ -109,7 +107,12 @@ class BillBoardObject(DirectObject):
         return task.cont
 
     def move_toward(self, task):
-        if self.health < 0:
+        if self.health < 0 or self.card_physics_node is None:
+            if self.health < 0:
+                pos = self.card_physics_np.getPos()
+                CrystalObject(pos, self.dropPath, name=self.dropName)
+
+            self.removeEnemy()
             return task.done
 
         direction = self.target - self.card_physics_np.getPos()
@@ -132,8 +135,11 @@ class BillBoardObject(DirectObject):
             if (result.hasHit() and result.getNode().getName() == 'Player') or not result.hasHit():
                 self.target = self.playerNode.getPos()
             else:
-                self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + self.nav_offset,
-                                                    end=self.playerNode.getPos() + self.nav_offset)
+                try:
+                    self.path = self.pathfinder.getPath(start=self.card_physics_np.getPos() + self.nav_offset,
+                                                        end=self.playerNode.getPos() + self.nav_offset)
+                except:
+                    self.path = None
 
                 if self.path is not None:
                     self.current_node = 0
@@ -145,3 +151,11 @@ class BillBoardObject(DirectObject):
                     self.target = self.playerNode.getPos()
 
         return task.cont
+
+    def removeEnemy(self):
+        self.removeAllTasks()
+        self.ignoreAll()
+
+        if self.card_physics_node is not None:
+            self.card_physics_node.removeAllChildren()
+            base.world.remove(self.card_physics_node)
