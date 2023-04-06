@@ -1,7 +1,7 @@
 from direct.interval.MetaInterval import Sequence
 from direct.showbase.DirectObject import DirectObject
 from panda3d.bullet import BulletConvexHullShape, BulletRigidBodyNode
-from panda3d.core import Vec3, LPoint3
+from panda3d.core import Vec3, LPoint3, NodePath
 
 
 class CrystalObject(DirectObject):
@@ -42,18 +42,18 @@ class CrystalObject(DirectObject):
         self.add_task(self.move_to_player, 'go_to_player')
 
     def track_lifetime(self, task):
-        self.lifetime -= 0.25
+        self.lifetime -= 0.05
 
         if self.lifetime < 0:
-            self.np.node().removeAllChildren()
-            base.world.remove(self.np.node())
-            self.removeAllTasks()
+            self.removeCrystal()
+
             return task.done
 
         return task.cont
 
     def move_to_player(self, task):
-        if self.lifetime < 0:
+        if self.lifetime < 0 or self.np.node() is None:
+            self.removeCrystal()
             return task.done
 
         direction = self.playerNode.getPos() - self.np.getPos()
@@ -63,3 +63,11 @@ class CrystalObject(DirectObject):
         self.np.node().applyCentralForce(accel)
 
         return task.cont
+
+    def removeCrystal(self):
+        if self.np.node() is not None:
+            self.np.node().removeAllChildren()
+            base.world.remove(self.np.node())
+
+        self.removeAllTasks()
+        self.ignoreAll()

@@ -30,6 +30,7 @@ loadPrcFile(resource_path('Confauto.prc'))
 DEBUG = False
 GENERATE_NAVMESH = False
 
+
 class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
@@ -232,18 +233,13 @@ class MyApp(ShowBase):
         self.player.score = 0
         self.player.scoreLabel.setText('Score: 0')
 
-        for crystal in self.render.findAllMatches("**/*crystal"):
-            crystal.node().removeAllChildren()
-            self.world.remove(crystal.node())
+        for crystal in self.render.findAllMatches("**/*CrystalClass"):
+            crystal.removeCrystal()
 
-        for bullet in self.render.findAllMatches("**/*Bullet"):
-            bullet.node().removeAllChildren()
-            self.world.remove(bullet.node())
+        self.player.bullets.clear()
 
         for enemy in self.enemies:
-            enemy.card_physics_node.removeAllChildren()
-            self.world.remove(enemy.card_physics_node)
-            enemy.removeAllTasks()
+            enemy.removeEnemy()
         self.enemies.clear()
 
     # Update
@@ -274,9 +270,6 @@ class MyApp(ShowBase):
 
         self.player.shield.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
 
-        # for crystals in self.crystals:
-        #    crystals.np.setColorScale(self.player.r, self.player.g, self.player.b, 1.0)
-
         self.updateEnemies()
 
         for enemySpawner in self.enemySpawners:
@@ -293,7 +286,6 @@ class MyApp(ShowBase):
         playerPos = self.player.playerRBNode.getPos()
         for enemy in self.enemies:
             if enemy.health > 0:
-                #enemy.move_toward(playerPos)
                 new_enemies.append(enemy)
             else:
                 self.player.score += 1

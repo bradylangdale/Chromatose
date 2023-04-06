@@ -103,3 +103,8 @@ class BulletManager(DirectObject):
         self.bullets = new_bullets
 
         return task.cont
+
+    def clear(self):
+        for bullet in self.bullets:
+            bullet.node().removeAllChildren()
+            base.world.remove(bullet.node())
